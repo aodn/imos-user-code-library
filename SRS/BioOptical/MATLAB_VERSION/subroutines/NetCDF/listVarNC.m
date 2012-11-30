@@ -30,6 +30,8 @@ function [allVarnames,allVaratts]=listVarNC(nc)
 
 
 %% list all the Variables
+if ~isinteger(nc),          error('nc must be an integer');        end
+
 ii=1;
 Bool=1;
 % preallocation

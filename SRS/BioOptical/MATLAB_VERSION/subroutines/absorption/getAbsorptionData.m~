@@ -33,8 +33,8 @@ function profileData=getAbsorptionData(ncFile,variable,profile)
 % The script is distributed under the terms of the GNU General Public License 
 
 if ~ischar(ncFile),          error('ncFile must be a string');        end
-if ~ischar(variable),        error('variable must be a string');        end
-if ~isstruct(profile),       error('profile must be a structure');        end
+if ~ischar(variable),          error('variable must be a string');        end
+if ~isstruct(profile),          error('profile must be a structure');        end
 
 
 if exist(ncFile,'file') ==2
@@ -110,7 +110,6 @@ if exist(ncFile,'file') ==2
     profileData.time=timeData;
     
     netcdf.close(nc)
-    
     catch err
         netcdf.close(nc)
         error('MATLAB:NetCDF',  'error while reading NetCDF');

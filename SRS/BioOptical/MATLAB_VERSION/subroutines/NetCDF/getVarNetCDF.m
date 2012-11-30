@@ -38,13 +38,16 @@ function [varData,varAtt]=getVarNetCDF(varName,ncid)
 % Copyright 2012 IMOS
 % The script is distributed under the terms of the GNU General Public License 
 
+if ~isinteger(nc),          error('nc must be an integer');        end
+if ~ischar(varName),          error('varName must be a string');        end
+
 
 ii=1;
 Bool=1;
 % preallocation
-[~,nvars,~,~] = netcdf.inq(ncid);% nvar is actually the number of Var + dim.
-allVarnames=cell(1,nvars);
-allVaratts=cell(1,nvars);
+[~,nVars,~,~] = netcdf.inq(ncid);% nvar is actually the number of Var + dim.
+allVarnames=cell(1,nVars);
+allVaratts=cell(1,nVars);
 
 while  Bool==1
     try

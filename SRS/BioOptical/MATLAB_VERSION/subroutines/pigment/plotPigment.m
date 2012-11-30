@@ -30,6 +30,7 @@ function plotPigment(profileData)
 % Copyright 2012 IMOS
 % The script is distributed under the terms of the GNU General Public License 
 
+if ~isstruct(profileData),       error('profileData must be a structure');        end
 
 
 %% plot many depth in same graph
