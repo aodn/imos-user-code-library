@@ -1,9 +1,9 @@
 function [varData,varAtt]=getVarNetCDF(varName,ncid)
 %%getVarNetCDF gets the varData from a NetCDF for one variable only.
-% The script lists all the Variables in the NetCDF file. If the
+% The script lists all the Variables in the NetCDF file. If the 
 % variable is called TIME (case does not matter), then the variable is
 % converted to a matlab time value, by adding the time offset ... following
-% the CF conventions
+% the CF conventions 
 % If the variable to load is not TIME, the data is extracted, and all values
 % are modified according to the attributes of the variable following the CF
 % convention (such as value_min value_max, scale-factor , _Fillvalue ...)
@@ -24,7 +24,7 @@ function [varData,varAtt]=getVarNetCDF(varName,ncid)
 %    [varData,varAtt]=getVarNetCDF('TIME',ncid)
 %
 % Other m-files required:
-% Other files required:
+% Other files required: 
 % Subfunctions: none
 % MAT-files required: none
 %
@@ -36,9 +36,9 @@ function [varData,varAtt]=getVarNetCDF(varName,ncid)
 % Oct 2012; Last revision: 30-Oct-2012
 %
 % Copyright 2012 IMOS
-% The script is distributed under the terms of the GNU General Public License
+% The script is distributed under the terms of the GNU General Public License 
 
-if ~isnumeric(ncid),          error('ncid must be a numerical value');        end
+if ~isnumeric(nc),          error('nc must be a number');        end
 if ~ischar(varName),          error('varName must be a string');        end
 
 
@@ -162,9 +162,9 @@ else
             varData = preDATAmodified;
         end
         
-    elseif dimlen == 0
+    elseif dimlen ==0
         disp('File is corrupted, or variable Time is badly spelled')
-        varData = [];
+        varData=[];
     end
     
 end

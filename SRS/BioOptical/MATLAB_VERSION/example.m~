@@ -2,13 +2,6 @@
 % The script is distributed under the terms of the GNU General Public License
 %
 % this file tends to demonstrate how to use BioOptical data stored in the NetCDF format
-% those NetCDF files are available at the moment of writting at the
-% following address:
-% http://opendap-vpac.arcs.org.au/thredds/catalog/IMOS/SRS/BioOptical/catalog.html
-%
-% For more information, visit http://imos.aodn.org.au/webportal/ 
-%   -> Satellite Remote Sensing (SRS)
-%         -> SRS Bio Optical DataBase
 %
 % Syntax:  profileData=getAbsorptionData(ncFile,variable,profile)
 %

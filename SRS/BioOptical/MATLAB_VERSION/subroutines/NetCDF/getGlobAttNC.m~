@@ -38,14 +38,14 @@ function [gattname,gattval]=getGlobAttNC(ncid)
 
 
 
-if ~isnumeric(ncid),          error('ncid must be a numerical value');        end
+if ~isnumeric(ncid),          error('ncid must be a number');        end
 
 % preallocation
 [ ~, ~, nAtts ,~] = netcdf.inq(ncid);
-gattname = cell(1,nAtts);
-gattval = cell(1,nAtts);
+gattname=cell(1,nAtts);
+gattval=cell(1,nAtts);
 
-for aa = 0:nAtts-1
+for aa=0:nAtts-1
     gattname{aa+1} = netcdf.inqAttName(ncid,netcdf.getConstant('NC_GLOBAL'),aa);
     gattval{aa+1} = netcdf.getAtt(ncid,netcdf.getConstant('NC_GLOBAL'),gattname{aa+1});
 end

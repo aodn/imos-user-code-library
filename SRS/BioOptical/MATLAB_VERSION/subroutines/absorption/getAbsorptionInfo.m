@@ -14,7 +14,7 @@ function [profileInfo,variableInfo,globalAttributes]=getAbsorptionInfo(ncFile)
 %
 %
 % Example:
-%    [profileInfo,variableInfo,globalAttributes]=getAbsorptionInfo('/this/is/thepath/IMOS_test.nc')
+%    [profileInfo,variableInfo,globalAttributes]=getAbsorptionInfo('/this/is/thepath/IMOS_test.ncid')
 %
 % Other m-files
 % required:
@@ -36,51 +36,55 @@ function [profileInfo,variableInfo,globalAttributes]=getAbsorptionInfo(ncFile)
 if ~ischar(ncFile),           error('ncFile must be a string');        end
 
 if exist(ncFile,'file') ==2
-    nc = netcdf.open(char(ncFile), 'NC_NOWRITE');
-    %     [numdims, numvars, numglobalatts, unlimdimID] = netcdf.inq(nc);
-    %     [dimname, dimlen] = netcdf.inqDim(nc,1);
+    ncid = netcdf.open(char(ncFile), 'NC_NOWRITE');
+    
     try
-        [allVarnames,~]=listVarNC(nc);
+        [allVarnames,~]=listVarNC(ncid);
         
         % 9 known variables
-        dimidTIME       = netcdf.inqVarID(nc,'TIME');
-        dimidLAT        = netcdf.inqVarID(nc,'LATITUDE');
-        dimidLON        = netcdf.inqVarID(nc,'LONGITUDE');
-        dimidLAMBDA     = netcdf.inqVarID(nc,'wavelength'); %WAVELENGHT?
-        dimidDEPTH      = netcdf.inqVarID(nc,'DEPTH');
-        dimidstation_name = netcdf.inqVarID(nc,'station_name');
-        dimidprofile    = netcdf.inqVarID(nc,'profile');
-        dimidstation_index = netcdf.inqVarID(nc,'station_index');
-        dimidrowSize    = netcdf.inqVarID(nc,'rowSize');
+        dimidTIME       = netcdf.inqVarID(ncid,'TIME');
+        dimidLAT        = netcdf.inqVarID(ncid,'LATITUDE');
+        dimidLON        = netcdf.inqVarID(ncid,'LONGITUDE');
+        dimidLAMBDA     = netcdf.inqVarID(ncid,'wavelength'); %WAVELENGHT?
+        dimidDEPTH      = netcdf.inqVarID(ncid,'DEPTH');
+        dimidstation_name = netcdf.inqVarID(ncid,'station_name');
+        dimidprofile    = netcdf.inqVarID(ncid,'profile');
+        dimidstation_index = netcdf.inqVarID(ncid,'station_index');
+        dimidrowSize    = netcdf.inqVarID(ncid,'rowSize');
         
-        [~,  numvars, ~,  ~] = netcdf.inq(nc);
+        [~,  numvars, ~,  ~] = netcdf.inq(ncid);
+        array_of_all_variables=1:numvars;
         
-        tttt=1:numvars;
-        ttt=tttt(setdiff(1:length(tttt), [tttt(dimidTIME+1),tttt(dimidLAT+1), ...
-            tttt(dimidLON+1),tttt(dimidLAMBDA+1),tttt(dimidDEPTH+1), ...
-            tttt(dimidstation_name+1),tttt(dimidprofile+1),tttt(dimidstation_index+1), ...
-            tttt(dimidrowSize+1)]));
-        for ii=1:length(ttt)
-            dimidVAR{ii}= netcdf.inqVarID(nc,allVarnames{ttt(ii)});
-            variableList{ii}=allVarnames{ttt(ii)};
-            %         [varattName{ii},varattVal{ii}] = getVarAtt(nc,allVarnames{ttt(ii)});
-            [~,varAtt{ii}]=getVarNetCDF(variableList{ii},nc);
-            varAtt{ii}.varname=variableList{ii};
+        sub_array_of_variables = array_of_all_variables(setdiff(1:length(array_of_all_variables),...
+            [array_of_all_variables(dimidTIME+1),array_of_all_variables(dimidLAT+1), ...
+            array_of_all_variables(dimidLON+1),array_of_all_variables(dimidLAMBDA+1),...
+            array_of_all_variables(dimidDEPTH+1), ...
+            array_of_all_variables(dimidstation_name+1),array_of_all_variables(dimidprofile+1),array_of_all_variables(dimidstation_index+1), ...
+            array_of_all_variables(dimidrowSize+1)]));
+        
+        dimidVAR = cell(1,length(sub_array_of_variables));
+        variableList = cell(1,length(sub_array_of_variables));
+        for ii = 1:length(sub_array_of_variables)
+            dimidVAR{ii} = netcdf.inqVarID(ncid,allVarnames{sub_array_of_variables(ii)});
+            variableList{ii} = allVarnames{sub_array_of_variables(ii)};            
+            [~,varAtt{ii}]=getVarNetCDF(variableList{ii},ncid);
+            varAtt{ii}.varname = variableList{ii};
             variableInfo.(variableList{ii})=varAtt{ii};
         end
         
-        [lat,~] = getVarNetCDF('LATITUDE',nc);
-        [lon,~] = getVarNetCDF('LONGITUDE',nc);
-        [time,~]= getVarNetCDF('TIME',nc);
+        [lat,~] = getVarNetCDF('LATITUDE',ncid);
+        [lon,~] = getVarNetCDF('LONGITUDE',ncid);
+        [time,~]= getVarNetCDF('TIME',ncid);
         
         
         %% which profile do we plot ?
-        profileData=getVarNetCDF('profile',nc);
+        profileData=getVarNetCDF('profile',ncid);
         
-        StationIndex = (netcdf.getVar(nc,dimidstation_index));
-        StationNames = (netcdf.getVar(nc,dimidstation_name));
+        StationIndex = (netcdf.getVar(ncid,dimidstation_index));
+        StationNames = (netcdf.getVar(ncid,dimidstation_name));
         strlen = size(StationNames,1);
         nStation = length(unique(StationIndex));
+        stationName=cell(1,nStation);
         for iiStation = 1:nStation
             stationName{iiStation} = regexprep(StationNames(1:strlen,iiStation)', '[^\w'']', '');
         end
@@ -94,12 +98,12 @@ if exist(ncFile,'file') ==2
             profileInfo(ii).profileTime = time(ii);
         end
         
-        [globalAttributes.gattName,globalAttributes.gattVal] = getGlobAttNC(nc);
+        [globalAttributes.gattName,globalAttributes.gattVal] = getGlobAttNC(ncid);
         
-        netcdf.close(nc)
+        netcdf.close(ncid)
         
     catch err
-        netcdf.close(nc)
+        netcdf.close(ncid)
         error('MATLAB:NetCDF',  'error while reading NetCDF');
     end
     

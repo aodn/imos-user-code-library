@@ -47,21 +47,25 @@ if exist(ncFile,'file') ==2
         dimidTIME = netcdf.inqVarID(nc,'TIME');
         dimidLAT = netcdf.inqVarID(nc,'LATITUDE');
         dimidLON = netcdf.inqVarID(nc,'LONGITUDE');
-        dimidDEPTH= netcdf.inqVarID(nc,'DEPTH');
-        dimidstation_name= netcdf.inqVarID(nc,'station_name');
-        dimidprofile= netcdf.inqVarID(nc,'profile');
-        dimidstation_index= netcdf.inqVarID(nc,'station_index');
-        dimidrowSize= netcdf.inqVarID(nc,'rowSize');
+        dimidDEPTH = netcdf.inqVarID(nc,'DEPTH');
+        dimidstation_name = netcdf.inqVarID(nc,'station_name');
+        dimidprofile = netcdf.inqVarID(nc,'profile');
+        dimidstation_index = netcdf.inqVarID(nc,'station_index');
+        dimidrowSize = netcdf.inqVarID(nc,'rowSize');
         
         [~, numvars, ~, ~] = netcdf.inq(nc);
-        tttt=1:numvars;
-        ttt=tttt(setdiff(1:length(tttt),[tttt(dimidTIME+1),tttt(dimidLAT+1),...
-            tttt(dimidLON+1),tttt(dimidDEPTH+1),...
-            tttt(dimidstation_name+1),tttt(dimidprofile+1),tttt(dimidstation_index+1),...
-            tttt(dimidrowSize+1)]));
-        for ii=1:length(ttt)
-            % dimidVAR{ii}= netcdf.inqVarID(nc,allVarnames{ttt(ii)});
-            variableList{ii}=allVarnames{ttt(ii)};
+        array_of_all_variables = 1:numvars;
+        
+        sub_array_of_variables =    array_of_all_variables(setdiff(1:length(array_of_all_variables),...
+            [array_of_all_variables(dimidTIME+1),array_of_all_variables(dimidLAT+1),...
+            array_of_all_variables(dimidLON+1),array_of_all_variables(dimidDEPTH+1),...
+            array_of_all_variables(dimidstation_name+1),array_of_all_variables(dimidprofile+1),...
+            array_of_all_variables(dimidstation_index+1),...
+            array_of_all_variables(dimidrowSize+1)]));
+        
+        for ii=1:length(sub_array_of_variables)
+            % dimidVAR{ii}= netcdf.inqVarID(nc,allVarnames{sub_array_of_variables(ii)});
+            variableList{ii}=allVarnames{sub_array_of_variables(ii)};
         end
         dimidVAR= netcdf.inqVarID(nc,variable.varname);
         
