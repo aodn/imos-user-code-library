@@ -1,13 +1,7 @@
-.idea
 *.iml
-target
-stacktrace.log
 .DS_Store
-portal-all.js
-DELETED_UNIT_TESTS
 .classpath
 .project
 .settings
 target-eclipse
-.link_to_grails_plugins
 *~
