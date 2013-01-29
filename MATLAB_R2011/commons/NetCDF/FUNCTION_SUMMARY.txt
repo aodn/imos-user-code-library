@@ -1,0 +1,41 @@
+THIS FILE LISTS ALL THE FUNCTIONS AVAILABLE IN THE CURRENT FOLDER,
+GIVES A SHORT DESCRIPTION AND A HOWTO
+
+Contents:
+
+1 netCDFParse
+
+	1.1 Installation
+		To install the file, simply add it to the path of your matlab path
+
+	1.2 Dependencies
+		This function requires the nctoolbox available at http://code.google.com/p/nctoolbox/ to be installed.
+		The installation is really achievable:
+
+		In Matlab, change to the nctoolbox directory. For example:
+		>> cd ~/Documents/Matlab/nctoolbox
+		
+		In Matlab, run the setup_nctoolbox function
+		>> setup_nctoolbox
+		
+		If you want nctoolbox to be available each time you start Matlab, edit startup.m:
+		>> edit startup.m
+		
+		and add these lines:
+		
+		addpath('c:/change-to-your-path/nctoolbox')
+		setup_nctoolbox
+
+	
+	1.3 description
+		netCDFParse is the core of the “IMOS user code library”. This function parses a NetCDF file, wether from a local address or an OPeNDAP URL, and harvests its entire content into the MATLAB workspace
+
+	1.4 Use example
+		netCDFParse('/path/to/netcdfFile.nc')
+
+	1.5 Known Issues
+	
+	1.6 Contact
+	email: laurent.besnard@utas.edu.au   , projectofficers@emii.org.au
+
+
