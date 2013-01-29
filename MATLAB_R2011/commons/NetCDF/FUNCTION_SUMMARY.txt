@@ -28,7 +28,8 @@ Contents:
 
 	
 	1.3 description
-		netCDFParse is the core of the “IMOS user code library”. This function parses a NetCDF file, wether from a local address or an OPeNDAP URL, and harvests its entire content into the MATLAB workspace
+		netCDFParse is the core of the “IMOS user code library”. This function parses a NetCDF file, wether from 
+		a local address or an OPeNDAP URL, and harvests its entire content into the MATLAB workspace
 
 	1.4 Use example
 		netCDFParse('/path/to/netcdfFile.nc')
