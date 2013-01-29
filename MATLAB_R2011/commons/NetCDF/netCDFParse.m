@@ -1,57 +1,59 @@
-function dataset = netCDFParse (NetCDF_location,varargin)
+function dataset = netCDFParse (inputFileName,varargin)
 %%netCDFParse retrieves all information stored in the NetCDF file.
 %
-% The script lists all the Variables in the NetCDF file. If the
-% variable is called TIME (case does not matter), then the variable is
-% converted to a matlab time value, by adding the time offset ... following
-% the CF conventions
-% If the variable to load is not TIME, the data is extracted, and all values
-% are modified according to the attributes of the variable following the CF
-% convention (such as value_min value_max, scale-factor , _Fillvalue ...)
-% http://cf-pcmdi.llnl.gov/documents/cf-conventions/1.1/cf-conventions.html
-% Syntax:  [varData,varAtt]=getVarNC_2(varName,ncid)
+% The NetCDF parser function, named netCDFParse, is the core of the
+% “IMOS user code library”. This function parses a NetCDF file, either 
+% from a local address or an OPeNDAP URL, and harvests its entire 
+% content into the workspace
+%
 %
 % Inputs:
+%    inputFileName : opendap URL or local address of the NetCDF file
+%
+% Optional arguments:
+%    'parserOption' , [parserOption]
+%     [parserOption]   'all'       => to retrieve the entire file
+%                      'metadata'  => to retrieve metadata only
+%   
+%
+%    'variable' , [varList]   => Parse only a specified set of variables
+%
 %
 % Outputs:
 %    gattname         : array of string of attribute names
 %    gattval          : array of string of attribute values
 %
 % Example:
-%    NetCDF_location='/home/lbesnard/Desktop/BioOptical_alldata/absorption/NetCDF/1997_cruise-FR1097/absorption/IMOS_SRS-OC-BODBAW_X_19971201T052600Z_FR1097-absorption-CDOM_END-19971207T180500Z_C-20121129T130000Z.nc'
-%   BOM QC flag
-%   NetCDF_location='/media/Laurent_emII/IMOS_SOOP-SST_T_20111025T000000Z_VHW-yearly-agg_END-20111110T085900Z_C-20121219T190000Z.nc';
+%   dataset = netCDFParse (inputFileName, 'parserOption' , [parserOption] , 'variable' , [varList] )
 %
-%   IMOS qc
-%   NetCDF_location='/media/Laurent_emII/IMOS_FAIMMS_T_20120809T014016Z_DAVSF5_FV01_END-20120822T030536Z_C-20121017T035848Z.nc'
-%   dataset = netCDFParse (NetCDF_location);
-%   dataset = netCDFParse (NetCDF_location,'parserOption','all');
-%   dataset = netCDFParse (NetCDF_location,'parserOption','metadata');
-%   dataset = netCDFParse (NetCDF_location,'variables',['TEMP']);
-%   dataset = netCDFParse (NetCDF_location,'variables',['badVarName']); %   equivalent to grab only medatata
-%   dataset = netCDFParse (NetCDF_location,'variables',['ag'],'parserOption','all');
-%   dataset = netCDFParse (NetCDF_location,'parserOption','all','variables',['TEMP']);
 %
-%    [varData,varAtt]=getVarNetCDF('TIME',ncid)
+%    netCDFParse('/path/to/netcdfFile.nc' , 'variables' , {'PSAL' , 'TEMP'})
+%    will only grab data and metadata for both PSAL and TEMP
 %
-% Other m-files required:readConfig
-% Other files required:
+%    netCDFParse('/path/to/netcdfFile.nc' , 'parserOption' , 'all', 'variables' , {'PSAL' , 'TEMP'})
+%    will parse absolutely everything, because 'parserOption' has the value 'all'
+%
+%    netCDFParse('/path/to/netcdfFile.nc' , 'parserOption' , 'metadata', 'variables' , { 'TEMP'})
+%    will parse all metadata plus data only for TEMP
+%
+% Other m-files required:
+% Other files required:nctoolbox, http://code.google.com/p/nctoolbox/
 % Subfunctions: none
 % MAT-files required: none
 %
-% See also: netcdf.open,listVarNC,getVarNetCDF
+% See also: 
 %
 % Author: Laurent Besnard, IMOS/eMII
 % email: laurent.besnard@utas.edu.au
-% Website: http://imos.org.au/  http://froggyscripts.blogspot.com
-% Oct 2012; Last revision: 30-Oct-2012
+% Website: http://imos.org.au/  
+% Jan 2013; Last revision: 22-Jan-2013
 %
-% Copyright 2012 IMOS
+% Copyright 2013 IMOS
 % The script is distributed under the terms of the GNU General Public License
 
 dataset=struct;
 
-if ~ischar(NetCDF_location),          error('NetCDF_location must be a string value');        end
+if ~ischar(inputFileName),          error('inputFileName must be a string value');        end
 
 
 %% section to read the optional arguments
@@ -80,7 +82,7 @@ end
 if exist('parserOptionValue','var');    else parserOptionValue='all' ;end
 % if exist('variablesChoosenByUser','var');    fprintf('%s\n',variablesChoosenByUser) ;end
 
-nctoolbox_datasetInfo = ncdataset(NetCDF_location); %open the netcdf file
+nctoolbox_datasetInfo = ncdataset(inputFileName); %open the netcdf file
 
 %% collect global attributes
 globalAttributes = nctoolbox_datasetInfo.attributes;
@@ -337,6 +339,38 @@ end
 
 
 function cleanedDataset = cleanNetCDFValues(dataset)
+%%cleanNetCDFValues modifies the raw values from a NetCDF files according
+% to CF or IMOS attributes names, such as scale factors, valid_min and max
+% and Fillvalue. The dataset is afterwards ready to be used.
+%
+%
+% Syntax:  cleanedDataset = cleanNetCDFValues(dataset)
+%
+% Inputs:  
+%    dataset  : array of doubles of time values to convert
+%    
+% Outputs:
+%    cleanNetCDFValues    : same structure as dataset, with modified values
+%
+% Example:
+%   dataset = cleanNetCDFValues (inputFileName):
+%   cleanedDataset = cleanNetCDFValues(dataset)
+%   
+%
+% Other m-files required:
+% Other files required:
+% Subfunctions: none
+% MAT-files required: none
+%
+% See also: netCDFParse
+%
+% Author: Laurent Besnard, IMOS/eMII
+% email: laurent.besnard@utas.edu.au
+% Website: http://imos.org.au/  
+% Jan 2013; Last revision: 22-Jan-2013
+%
+% Copyright 2013 IMOS
+% The script is distributed under the terms of the GNU General Public License    
 
 cleanedDataset=dataset;
 varnames= fieldnames(dataset.variables);
@@ -403,6 +437,43 @@ end
 
 
 function timeConverted =  convertTimeToMatlab (timeToConvert,units)
+%%timeConverted converts a array of time values extracted from a netcdf file
+% into a matlab readable value.
+%
+% The function uses a string called units which is usually written such as :
+% 'days since ...' or 'seconds since ...' . The rest of the string is always
+% written in the same way 'DD-MM-YYYY' (where DD=int(Day); MM=int(Month);
+% YYYY=int(Year))
+% in order to convert the time properly
+%
+% Syntax:  timeConverted =  convertTimeToMatlab (timeToConvert,units)
+%
+% Inputs:  
+%    timeToConvert  : array of doubles of time values to convert
+%    units      : string of the unit attribut field in the NetCDF file
+%
+% Outputs:
+%    timeConverted    : array of doubles of converted time values
+%
+% Example:
+%   dataset = netCDFParse (inputFileName):
+%   timeConverted = convertTimeToMatlab(dataset.dimensions.TIME.data, dataset.dimensions.TIME.units);
+%   
+%
+% Other m-files required:
+% Other files required:
+% Subfunctions: none
+% MAT-files required: none
+%
+% See also: netCDFParse
+%
+% Author: Laurent Besnard, IMOS/eMII
+% email: laurent.besnard@utas.edu.au
+% Website: http://imos.org.au/  
+% Jan 2013; Last revision: 22-Jan-2013
+%
+% Copyright 2013 IMOS
+% The script is distributed under the terms of the GNU General Public License
 strOffset =units;
 indexNum = regexp(strOffset,'[^0-9]*(\d{4})-(\d{2})-(\d{2})[^0-9]*(\d{2})[^0-9]*(\d{2})[^0-9]*(\d{2})*','tokens');
 
