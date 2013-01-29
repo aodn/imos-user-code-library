@@ -80,9 +80,12 @@ if optargin > 0
 end
 
 if exist('parserOptionValue','var');    else parserOptionValue='all' ;end
-% if exist('variablesChoosenByUser','var');    fprintf('%s\n',variablesChoosenByUser) ;end
 
-nctoolbox_datasetInfo = ncdataset(inputFileName); %open the netcdf file
+try
+    nctoolbox_datasetInfo = ncdataset(inputFileName); %open the netcdf file
+catch
+    error('netCDFParse:fileCheck','netCDFParse: File %s not found\n',inputFileName);
+end
 
 %% collect global attributes
 globalAttributes = nctoolbox_datasetInfo.attributes;
@@ -129,12 +132,11 @@ else
     if sum(strcmpi(variablesChoosenByUser, (variablesList))) == 0
         warning('variable does not exist in dataset','Variable %s does not exist in the NetCDF file. Only medata will be parsed',variablesChoosenByUser);
     end
-    %cehck variable exist
+    %check variable exist
 end
 
 %% get variables , only QC ones
 for iiVar=1:length(variablesList)
-    %     var = nctoolbox_datasetInfo.attributes(variablesList(iiVar))
     
     dimensionAssociated = nctoolbox_datasetInfo.dimensions(listVariables_NOQC(iiVar))';
     dataset.variables.(variablesList{iiVar}).dimensions = [dimensionAssociated];
@@ -189,24 +191,23 @@ dimensionsSize = dimensionsSize(m_dim);
 %% get attributes and values of the 'dimensions' variables
 for iiDim=1:length(dimensionsList)
     
-%     try
         if  sum(strcmp(listVariables,dimensionsList{iiDim})) ~= 0
             dimAttributes = nctoolbox_datasetInfo.attributes(dimensionsList(iiDim));
         else
             dimAttributes = [];
         end
-%     catch
-%         dimAttributes = [];
-%     end
-    
+
     dataset.dimensions.(dimensionsList{iiDim})=struct; % we initialise the structure, even if there is no data, nor metadata to fill in
     for iiDimAttributes = 1:size(dimAttributes,1)
-        attName = strrep((dimAttributes{iiDimAttributes,1}),'_','');
+        attName=(dimAttributes{iiDimAttributes,1});
+        if  strfind(attName(1),'_') %remove the underscore at the beginning of an attribute
+            attName=attName(2:end);
+        end
         dataset.dimensions.(dimensionsList{iiDim}).(attName) = dimAttributes{iiDimAttributes,2};
     end
     
     if ~strcmpi (parserOptionValue,'metadata') % harvest data
-        %         try
+        
         if  sum(strcmp(listVariables,dimensionsList{iiDim})) ~= 0 % means if there is no data for this dimension
             data =  nctoolbox_datasetInfo.data(dimensionsList(iiDim));
             dataset.dimensions.(dimensionsList{iiDim}).data = data;
@@ -218,7 +219,6 @@ for iiDim=1:length(dimensionsList)
                 
             end
             
-            %         catch
         else
             
             data = ( 1:dimensionsSize( strcmpi(dimensionsNames,dimensionsList{iiDim})))';
