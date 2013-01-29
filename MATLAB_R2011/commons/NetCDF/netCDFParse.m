@@ -2,7 +2,7 @@ function dataset = netCDFParse (inputFileName,varargin)
 %%netCDFParse retrieves all information stored in the NetCDF file.
 %
 % The NetCDF parser function, named netCDFParse, is the core of the
-% “IMOS user code library”. This function parses a NetCDF file, either 
+% “IMOS user code library”. This function parses a NetCDF file, wether 
 % from a local address or an OPeNDAP URL, and harvests its entire 
 % content into the workspace
 %
