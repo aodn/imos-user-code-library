@@ -156,11 +156,11 @@ for iiVar=1:length(variablesList)
             
             data =  nctoolbox_datasetInfo.data(variablesList(iiVar));
             
-            %convert time
-            if strcmpi( variablesList(iiVar), 'TIME')
-                timeUnits =  dataset.variables.(variablesList{iiVar}).units;
-                data = convertTimeToMatlab(data,timeUnits);
-            end
+%             %convert time
+%             if strcmpi( variablesList(iiVar), 'TIME')
+%                 timeUnits =  dataset.variables.(variablesList{iiVar}).units;
+%                 data = convertTimeToMatlab(data,timeUnits);
+%             end
             
             dataset.variables.(variablesList{iiVar}).data = data;
             clear data
@@ -212,12 +212,12 @@ for iiDim=1:length(dimensionsList)
             data =  nctoolbox_datasetInfo.data(dimensionsList(iiDim));
             dataset.dimensions.(dimensionsList{iiDim}).data = data;
             
-            if strcmpi( dimensionsList(iiDim), 'TIME')
-                timeUnits =  dataset.dimensions.(dimensionsList{iiDim}).units;
-                data = convertTimeToMatlab(data,timeUnits);
-                dataset.dimensions.(dimensionsList{iiDim}).data = data;
-                
-            end
+%             if strcmpi( dimensionsList(iiDim), 'TIME')
+%                 timeUnits =  dataset.dimensions.(dimensionsList{iiDim}).units;
+%                 data = convertTimeToMatlab(data,timeUnits);
+%                 dataset.dimensions.(dimensionsList{iiDim}).data = data;
+%                 
+%             end
             
         else
             
@@ -329,10 +329,35 @@ for iiVar=1:length(variablesList)
 end
 
 
+%warning, don't change the following order. It is important to clean first,
+%then to modify the values such as time. Otherwise there might be some
+%conflits with the valid min and max values ...
 
 %% clean variable and dimensions values - fillvalue offset ...
 if ~strcmpi (parserOptionValue,'metadata')
     dataset = cleanNetCDFValues(dataset);
+end
+
+%% convert time from dimension and/or variable type
+if ~strcmpi (parserOptionValue,'metadata')
+    
+    for iiDim=1:length(dimensionsList)
+        if strcmpi( dimensionsList(iiDim), 'TIME')
+            timeUnits =  dataset.dimensions.(dimensionsList{iiDim}).units;
+            data = convertTimeToMatlab(dataset.dimensions.(dimensionsList{iiDim}).data,timeUnits); %convert time
+            dataset.dimensions.(dimensionsList{iiDim}).data = data;
+            clear data
+        end
+    end
+    
+    for iiVar=1:length(variablesList)       
+        if strcmpi( variablesList(iiVar), 'TIME')
+            timeUnits =  dataset.variables.(variablesList{iiVar}).units;
+            data = convertTimeToMatlab(data,timeUnits);  %convert time
+            dataset.variables.(variablesList{iiVar}).data = data;
+            clear data
+        end
+    end    
 end
 
 end
