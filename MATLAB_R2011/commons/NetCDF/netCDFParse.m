@@ -2,8 +2,8 @@ function dataset = netCDFParse (inputFileName,varargin)
 %%netCDFParse retrieves all information stored in the NetCDF file.
 %
 % The NetCDF parser function, named netCDFParse, is the core of the
-% “IMOS user code library”. This function parses a NetCDF file, wether 
-% from a local address or an OPeNDAP URL, and harvests its entire 
+% “IMOS user code library”. This function parses a NetCDF file, wether
+% from a local address or an OPeNDAP URL, and harvests its entire
 % content into the workspace
 %
 %
@@ -14,7 +14,7 @@ function dataset = netCDFParse (inputFileName,varargin)
 %    'parserOption' , [parserOption]
 %     [parserOption]   'all'       => to retrieve the entire file
 %                      'metadata'  => to retrieve metadata only
-%   
+%
 %
 %    'variable' , [varList]   => Parse only a specified set of variables
 %
@@ -41,11 +41,11 @@ function dataset = netCDFParse (inputFileName,varargin)
 % Subfunctions: none
 % MAT-files required: none
 %
-% See also: 
+% See also:
 %
 % Author: Laurent Besnard, IMOS/eMII
 % email: laurent.besnard@utas.edu.au
-% Website: http://imos.org.au/  
+% Website: http://imos.org.au/
 % Jan 2013; Last revision: 22-Jan-2013
 %
 % Copyright 2013 IMOS
@@ -125,7 +125,7 @@ if exist('dimensionsList','var')
 else
     dimensionsList = unique(cat(1,otherDimension));
 end
-    
+
 if ~exist('variablesChoosenByUser','var')
     variablesChoosenByUser=variablesList;
 else
@@ -156,12 +156,6 @@ for iiVar=1:length(variablesList)
             
             data =  nctoolbox_datasetInfo.data(variablesList(iiVar));
             
-%             %convert time
-%             if strcmpi( variablesList(iiVar), 'TIME')
-%                 timeUnits =  dataset.variables.(variablesList{iiVar}).units;
-%                 data = convertTimeToMatlab(data,timeUnits);
-%             end
-            
             dataset.variables.(variablesList{iiVar}).data = data;
             clear data
         end
@@ -191,12 +185,12 @@ dimensionsSize = dimensionsSize(m_dim);
 %% get attributes and values of the 'dimensions' variables
 for iiDim=1:length(dimensionsList)
     
-        if  sum(strcmp(listVariables,dimensionsList{iiDim})) ~= 0
-            dimAttributes = nctoolbox_datasetInfo.attributes(dimensionsList(iiDim));
-        else
-            dimAttributes = [];
-        end
-
+    if  sum(strcmp(listVariables,dimensionsList{iiDim})) ~= 0
+        dimAttributes = nctoolbox_datasetInfo.attributes(dimensionsList(iiDim));
+    else
+        dimAttributes = [];
+    end
+    
     dataset.dimensions.(dimensionsList{iiDim})=struct; % we initialise the structure, even if there is no data, nor metadata to fill in
     for iiDimAttributes = 1:size(dimAttributes,1)
         attName=(dimAttributes{iiDimAttributes,1});
@@ -211,13 +205,6 @@ for iiDim=1:length(dimensionsList)
         if  sum(strcmp(listVariables,dimensionsList{iiDim})) ~= 0 % means if there is no data for this dimension
             data =  nctoolbox_datasetInfo.data(dimensionsList(iiDim));
             dataset.dimensions.(dimensionsList{iiDim}).data = data;
-            
-%             if strcmpi( dimensionsList(iiDim), 'TIME')
-%                 timeUnits =  dataset.dimensions.(dimensionsList{iiDim}).units;
-%                 data = convertTimeToMatlab(data,timeUnits);
-%                 dataset.dimensions.(dimensionsList{iiDim}).data = data;
-%                 
-%             end
             
         else
             
@@ -242,7 +229,7 @@ for iiVar=1:length(variablesList)
         
         ancillaryVariables_uncertainty = regexp(ancillaryVariables,'\w+uncertainty','match'); % this is not used yet ! in next version
         ancillaryVariables_qc = regexp(ancillaryVariables,'\w+quality_control','match');
-
+        
         if ~isempty(ancillaryVariables_qc)
             
             
@@ -264,6 +251,9 @@ for iiVar=1:length(variablesList)
                 flag_meanings = attNameQC(strcmpi('flag_meanings',attNameQC),2);
                 flag_quality_control_conventions = attNameQC(strcmpi('quality_control_conventions',attNameQC),2);
                 
+                flag_values = flag_values{:};
+                flag_meanings = flag_meanings{:};
+                flag_quality_control_conventions = flag_quality_control_conventions{:};
             elseif quality_control_set == 2 %ARGO quality control procedure
                 
             elseif quality_control_set == 3 %BOM quality control procedure (SST and Air-Sea fluxes)
@@ -271,11 +261,17 @@ for iiVar=1:length(variablesList)
                 flag_meanings = attNameQC(strcmpi('quality_control_flag_meanings',attNameQC),2);
                 flag_quality_control_conventions = attNameQC(strcmpi('quality_control_conventions',attNameQC),2);
                 
+                flag_values = flag_values{:};
+                flag_meanings = flag_meanings{:};
+                flag_quality_control_conventions = flag_quality_control_conventions{:};
             else %we assume it is IMOS
                 flag_values = attNameQC(strcmpi('flag_values',attNameQC),2);
                 flag_meanings = attNameQC(strcmpi('flag_meanings',attNameQC),2);
                 flag_quality_control_conventions = attNameQC(strcmpi('quality_control_conventions',attNameQC),2);
                 
+                flag_values = flag_values{:};
+                flag_meanings = flag_meanings{:};
+                flag_quality_control_conventions = flag_quality_control_conventions{:};
             end
             
             dataset.variables.(variablesList{iiVar}).flag_meanings = flag_meanings;
@@ -308,6 +304,9 @@ for iiVar=1:length(variablesList)
                     flag_meanings = attNameQC(strcmpi('quality_control_flag_meanings',attNameQC),2);
                     flag_quality_control_conventions = attNameQC(strcmpi('quality_control_conventions',attNameQC),2);
                     
+                    flag_values = flag_values{:};
+                    flag_meanings = flag_meanings{:};
+                    flag_quality_control_conventions = flag_quality_control_conventions{:};
                 else %we assume it is IMOS
                     flag_values = attNameQC(strcmpi('flag_values',attNameQC),2);
                     flag_meanings = attNameQC(strcmpi('flag_meanings',attNameQC),2);
@@ -350,15 +349,19 @@ if ~strcmpi (parserOptionValue,'metadata')
         end
     end
     
-    for iiVar=1:length(variablesList)       
+    for iiVar=1:length(variablesList)
         if strcmpi( variablesList(iiVar), 'TIME')
             timeUnits =  dataset.variables.(variablesList{iiVar}).units;
-            data = convertTimeToMatlab(data,timeUnits);  %convert time
+            data = convertTimeToMatlab(dataset.variables.(variablesList{iiVar}).data,timeUnits);  %convert time
             dataset.variables.(variablesList{iiVar}).data = data;
             clear data
         end
-    end    
+    end
 end
+
+%% add filename origine information
+[~, nameNC, extNC] = fileparts(inputFileName);
+dataset.metadata.netcdf_filename = [nameNC extNC];
 
 end
 
@@ -371,16 +374,16 @@ function cleanedDataset = cleanNetCDFValues(dataset)
 %
 % Syntax:  cleanedDataset = cleanNetCDFValues(dataset)
 %
-% Inputs:  
+% Inputs:
 %    dataset  : array of doubles of time values to convert
-%    
+%
 % Outputs:
 %    cleanNetCDFValues    : same structure as dataset, with modified values
 %
 % Example:
 %   dataset = cleanNetCDFValues (inputFileName):
 %   cleanedDataset = cleanNetCDFValues(dataset)
-%   
+%
 %
 % Other m-files required:
 % Other files required:
@@ -391,11 +394,11 @@ function cleanedDataset = cleanNetCDFValues(dataset)
 %
 % Author: Laurent Besnard, IMOS/eMII
 % email: laurent.besnard@utas.edu.au
-% Website: http://imos.org.au/  
+% Website: http://imos.org.au/
 % Jan 2013; Last revision: 22-Jan-2013
 %
 % Copyright 2013 IMOS
-% The script is distributed under the terms of the GNU General Public License    
+% The script is distributed under the terms of the GNU General Public License
 
 cleanedDataset=dataset;
 varnames= fieldnames(dataset.variables);
@@ -473,7 +476,7 @@ function timeConverted =  convertTimeToMatlab (timeToConvert,units)
 %
 % Syntax:  timeConverted =  convertTimeToMatlab (timeToConvert,units)
 %
-% Inputs:  
+% Inputs:
 %    timeToConvert  : array of doubles of time values to convert
 %    units      : string of the unit attribut field in the NetCDF file
 %
@@ -483,7 +486,7 @@ function timeConverted =  convertTimeToMatlab (timeToConvert,units)
 % Example:
 %   dataset = netCDFParse (inputFileName):
 %   timeConverted = convertTimeToMatlab(dataset.dimensions.TIME.data, dataset.dimensions.TIME.units);
-%   
+%
 %
 % Other m-files required:
 % Other files required:
@@ -494,7 +497,7 @@ function timeConverted =  convertTimeToMatlab (timeToConvert,units)
 %
 % Author: Laurent Besnard, IMOS/eMII
 % email: laurent.besnard@utas.edu.au
-% Website: http://imos.org.au/  
+% Website: http://imos.org.au/
 % Jan 2013; Last revision: 22-Jan-2013
 %
 % Copyright 2013 IMOS
