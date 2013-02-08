@@ -16,24 +16,26 @@ function dataset = netCDFParse (inputFileName,varargin)
 %                      'metadata'  => to retrieve metadata only
 %
 %
-%    'variable' , [varList]   => Parse only a specified set of variables
+%    'varList' , [varList]   => Parse only a specified set of variables
 %
 %
 % Outputs:
 %    dataset         : struct
 %
 % Example:
-%   dataset = netCDFParse (inputFileName, 'parserOption' , [parserOption] , 'variable' , [varList] )
+%   dataset = netCDFParse (inputFileName, 'parserOption' , [parserOption] , 'varList' , [varList] )
 %
 %
-%    netCDFParse('/path/to/netcdfFile.nc' , 'variables' , {'PSAL' , 'TEMP'})
+%    netCDFParse('/path/to/netcdfFile.nc' , 'varList' , {'PSAL' , 'TEMP'})
 %    will only grab data and metadata for both PSAL and TEMP
 %
-%    netCDFParse('/path/to/netcdfFile.nc' , 'parserOption' , 'all', 'variables' , {'PSAL' , 'TEMP'})
-%    will parse absolutely everything, because 'parserOption' has the value 'all'
+%    netCDFParse('/path/to/netcdfFile.nc' , 'parserOption' , 'all', 'varList' , {'PSAL' , 'TEMP'})
+%    will parse absolutely everything, because 'parserOption' has the value
+%    'all'. This is similar to call
+%    netCDFParse('/path/to/netcdfFile.nc' , 'varList' , {'PSAL' , 'TEMP'})
 %
-%    netCDFParse('/path/to/netcdfFile.nc' , 'parserOption' , 'metadata', 'variables' , { 'TEMP'})
-%    will parse all metadata plus data only for TEMP
+%    netCDFParse('/path/to/netcdfFile.nc' , 'parserOption' , 'metadata', 'varList' , { 'TEMP'})
+%    will parse all global attributes plus data only for the TEMP variable
 %
 % Other m-files required:
 % Other files required:nctoolbox, http://code.google.com/p/nctoolbox/
@@ -69,7 +71,7 @@ if optargin > 0
                 error('%s is a bad option for parserOption',parserOptionValue);
             end
             
-        elseif strcmpi(varargin{ii_optargin} , 'variables')
+        elseif strcmpi(varargin{ii_optargin} , 'varList')
             variablesChoosenByUser = varargin{ii_optargin+1};
             
         else  error('%s is not a valid option',varargin{ii_optargin});
@@ -82,8 +84,9 @@ if exist('parserOptionValue','var');    else parserOptionValue='all' ;end
 
 try
     nctoolbox_datasetInfo = ncdataset(inputFileName); %open the netcdf file
-catch
-    error('netCDFParse:fileCheck','netCDFParse: File %s not found\n',inputFileName);
+catch ME
+    errorString = getErrorString(ME);
+    error('netCDFParse:fileCheck',char(errorString))
 end
 
 %% collect global attributes
@@ -102,7 +105,8 @@ listVariables_NOQC=listVariables(~indexQCVar);
 
 % for each variable, list it's dimensions. result is string.
 % if same dimension name is the same as the variable name, then it it a
-% variable and not a dimension
+% variable and not a dimension. This bit is tricky and proper to the
+% nctoolbox behaviour.
 idim=1;
 ivar=1;
 otherDimension=[];
@@ -134,31 +138,59 @@ else
     %check variable exist
 end
 
+variablesToExport = variablesChoosenByUser;
 %% get variables , only QC ones
-for iiVar=1:length(variablesList)
+% for iiVar=1:length(variablesList)
+for iiVar=1:length(variablesToExport)
+
     
-    dimensionAssociated = nctoolbox_datasetInfo.dimensions(listVariables_NOQC(iiVar))';
-    dataset.variables.(variablesList{iiVar}).dimensions = [dimensionAssociated];
-    varAttributes = nctoolbox_datasetInfo.attributes(variablesList(iiVar));
+    dimensionAssociated = nctoolbox_datasetInfo.dimensions(variablesToExport(iiVar))';
     
+    dataset.variables.(variablesToExport{iiVar}).dimensions = [dimensionAssociated];
+    
+    varAttributes = nctoolbox_datasetInfo.attributes(variablesToExport(iiVar));
     
     for iiVarAttributes=1:size(varAttributes,1)
         attName=(varAttributes{iiVarAttributes,1});
         if  strfind(attName(1),'_') %remove the underscore at the beginning of an attribute
             attName=attName(2:end);
         end
-        dataset.variables.(variablesList{iiVar}).(attName) = varAttributes{iiVarAttributes,2};
+        
+        if isempty(regexp(attName,'ancillary_variables', 'once')) % we remove this attribute
+            dataset.variables.(variablesToExport{iiVar}).(attName) = varAttributes{iiVarAttributes,2};
+        end
     end
     
     if ~strcmpi (parserOptionValue,'metadata')
-        if sum( strcmpi(variablesChoosenByUser, (variablesList{iiVar})) ~= 0)
+        if sum( strcmpi(variablesChoosenByUser, (variablesToExport{iiVar})) ~= 0)
             
-            data =  nctoolbox_datasetInfo.data(variablesList(iiVar));
+            data =  nctoolbox_datasetInfo.data(variablesToExport(iiVar));
             
-            dataset.variables.(variablesList{iiVar}).data = data;
+            dataset.variables.(variablesToExport{iiVar}).data = data;
             clear data
         end
     end
+    %     dimensionAssociated = nctoolbox_datasetInfo.dimensions(listVariables_NOQC(iiVar))';
+    %     dataset.variables.(variablesList{iiVar}).dimensions = [dimensionAssociated];
+    %     varAttributes = nctoolbox_datasetInfo.attributes(variablesList(iiVar));
+    %     
+    %     for iiVarAttributes=1:size(varAttributes,1)
+    %         attName=(varAttributes{iiVarAttributes,1});
+    %         if  strfind(attName(1),'_') %remove the underscore at the beginning of an attribute
+    %             attName=attName(2:end);
+    %         end
+    %         dataset.variables.(variablesList{iiVar}).(attName) = varAttributes{iiVarAttributes,2};
+    %     end
+    %
+    %     if ~strcmpi (parserOptionValue,'metadata')
+    %         if sum( strcmpi(variablesChoosenByUser, (variablesList{iiVar})) ~= 0)
+    %
+    %             data =  nctoolbox_datasetInfo.data(variablesList(iiVar));
+    %
+    %             dataset.variables.(variablesList{iiVar}).data = data;
+    %             clear data
+    %         end
+    %     end
 end
 
 
@@ -172,9 +204,13 @@ end
 % dimensionsSize = cell(1,length(variablesList));
 dimensionsNames = [];
 dimensionsSize = [];
-for iiVar=1:length(variablesList)
-    dimensionsNames = [dimensionsNames nctoolbox_datasetInfo.dimensions(listVariables_NOQC(iiVar))'];
-    dimensionsSize = [dimensionsSize nctoolbox_datasetInfo.size(listVariables_NOQC(iiVar))];
+% for iiVar=1:length(variablesList)
+%     dimensionsNames = [dimensionsNames nctoolbox_datasetInfo.dimensions(listVariables_NOQC(iiVar))'];
+%     dimensionsSize = [dimensionsSize nctoolbox_datasetInfo.size(listVariables_NOQC(iiVar))];
+% end
+for iiVar=1:length(variablesToExport)
+    dimensionsNames = [dimensionsNames nctoolbox_datasetInfo.dimensions(variablesToExport(iiVar))'];
+    dimensionsSize = [dimensionsSize nctoolbox_datasetInfo.size(variablesToExport(iiVar))];
 end
 [~, m_dim, ~] = unique(dimensionsNames) ;
 dimensionsNames = dimensionsNames(m_dim);
@@ -218,74 +254,136 @@ end
 
 
 %% add QC variables and flags
-for iiVar=1:length(variablesList)
-    
-    %first we look for the variable attribute ancillary variables to see if
-    %it exists. If the field does not exist, then we try to look for the
-    %qc variable assuming its name is <variable>_quality_control
-    if isfield(dataset.variables.(variablesList{iiVar}),'ancillary_variables')
-        ancillaryVariables = dataset.variables.(variablesList{iiVar}).ancillary_variables;
+if ~strcmpi (parserOptionValue,'metadata')
+%     for iiVar=1:length(variablesList)
+%         
+%         %first we look for the variable attribute ancillary variables to see if
+%         %it exists. If the field does not exist, then we try to look for the
+%         %qc variable assuming its name is <variable>_quality_control
+%         if isfield(dataset.variables.(variablesList{iiVar}),'ancillary_variables')
+%             ancillaryVariables = dataset.variables.(variablesList{iiVar}).ancillary_variables;
+%             
+%             ancillaryVariables_uncertainty = regexp(ancillaryVariables,'\w+uncertainty','match'); % this is not used yet ! in next version
+%             ancillaryVariables_qc = regexp(ancillaryVariables,'\w+quality_control','match');
+%             
+%             if ~isempty(ancillaryVariables_qc)
+%                 
+%                 
+%                 dataQC =  nctoolbox_datasetInfo.data(ancillaryVariables_qc{1});
+%                 attNameQC = nctoolbox_datasetInfo.attributes(ancillaryVariables_qc{1});
+%                 
+%                 if (sum(strcmpi('quality_control_set',attNameQC(:,1)) == 0))
+%                     quality_control_set = cell2mat(attNameQC(strcmpi('quality_control_set',attNameQC),2));
+%                 else
+%                     quality_control_set=1; %we assume it is IMOS
+%                 end
+%                 
+%                 % quality_control_set=1  =>1, IMOS standard set using the IODE flags,                 0 1 2 3 4 5 6 7 8 9,       byte, 99
+%                 % quality_control_set=2  =>2, ARGO quality control procedure,                         0 1 2 3 4 5 6 7 8 9,       byte, 99
+%                 % quality_control_set=3  =>3, BOM quality control procedure (SST and Air-Sea fluxes), B C D E F G H L T U V X Z, char, 0
+%                 
+%                 if quality_control_set == 1     %IMOS standard set using the IODE flags
+%                     flag_values = attNameQC(strcmpi('flag_values',attNameQC),2);
+%                     flag_meanings = attNameQC(strcmpi('flag_meanings',attNameQC),2);
+%                     flag_quality_control_conventions = attNameQC(strcmpi('quality_control_conventions',attNameQC),2);
+%                     
+%                     flag_values = flag_values{:};
+%                     flag_meanings = flag_meanings{:};
+%                     flag_quality_control_conventions = flag_quality_control_conventions{:};
+%                 elseif quality_control_set == 2 %ARGO quality control procedure
+%                     
+%                 elseif quality_control_set == 3 %BOM quality control procedure (SST and Air-Sea fluxes)
+%                     flag_values = attNameQC(strcmpi('quality_control_flag_values',attNameQC),2);
+%                     flag_meanings = attNameQC(strcmpi('quality_control_flag_meanings',attNameQC),2);
+%                     flag_quality_control_conventions = attNameQC(strcmpi('quality_control_conventions',attNameQC),2);
+%                     
+%                     flag_values = flag_values{:};
+%                     flag_meanings = flag_meanings{:};
+%                     flag_quality_control_conventions = flag_quality_control_conventions{:};
+%                 else %we assume it is IMOS
+%                     flag_values = attNameQC(strcmpi('flag_values',attNameQC),2);
+%                     flag_meanings = attNameQC(strcmpi('flag_meanings',attNameQC),2);
+%                     flag_quality_control_conventions = attNameQC(strcmpi('quality_control_conventions',attNameQC),2);
+%                     
+%                     flag_values = flag_values{:};
+%                     flag_meanings = flag_meanings{:};
+%                     flag_quality_control_conventions = flag_quality_control_conventions{:};
+%                 end
+%                 
+%                 dataset.variables.(variablesList{iiVar}).flag_meanings = flag_meanings;
+%                 dataset.variables.(variablesList{iiVar}).flag_values = flag_values;
+%                 dataset.variables.(variablesList{iiVar}).flag = dataQC;
+%                 dataset.variables.(variablesList{iiVar}).flag_quality_control_conventions = flag_quality_control_conventions;
+%                 dataset.variables.(variablesList{iiVar}).quality_control_set = quality_control_set;
+%             end
+%         else
+%             try
+%                 ancillaryVariables_qc=strcat(variablesList{iiVar},'_quality_control');
+%                 if isempty(strfind(listVariables,ancillaryVariables_qc)) % if the variable name we just created is actually in the list of variables
+%                     dataQC =  nctoolbox_datasetInfo.data(ancillaryVariables_qc);
+%                     attNameQC = nctoolbox_datasetInfo.attributes(ancillaryVariables_qc);
+%                     quality_control_set = cell2mat(attNameQC(strcmpi('quality_control_set',attNameQC),2));
+%                     
+%                     % quality_control_set=1  =>1, IMOS standard set using the IODE flags,                 0 1 2 3 4 5 6 7 8 9,       byte, 99
+%                     % quality_control_set=2  =>2, ARGO quality control procedure,                         0 1 2 3 4 5 6 7 8 9,       byte, 99
+%                     % quality_control_set=3  =>3, BOM quality control procedure (SST and Air-Sea fluxes), B C D E F G H L T U V X Z, char, 0
+%                     
+%                     if quality_control_set == 1     %IMOS standard set using the IODE flags
+%                         flag_values = attNameQC(strcmpi('flag_values',attNameQC),2);
+%                         flag_meanings = attNameQC(strcmpi('flag_meanings',attNameQC),2);
+%                         flag_quality_control_conventions=attNameQC(strcmpi('quality_control_conventions',attNameQC),2);
+%                         
+%                     elseif quality_control_set == 2 %ARGO quality control procedure
+%                         
+%                     elseif quality_control_set == 3 %BOM quality control procedure (SST and Air-Sea fluxes)
+%                         flag_values = attNameQC(strcmpi('quality_control_flag_values',attNameQC),2);
+%                         flag_meanings = attNameQC(strcmpi('quality_control_flag_meanings',attNameQC),2);
+%                         flag_quality_control_conventions = attNameQC(strcmpi('quality_control_conventions',attNameQC),2);
+%                         
+%                         flag_values = flag_values{:};
+%                         flag_meanings = flag_meanings{:};
+%                         flag_quality_control_conventions = flag_quality_control_conventions{:};
+%                     else %we assume it is IMOS
+%                         flag_values = attNameQC(strcmpi('flag_values',attNameQC),2);
+%                         flag_meanings = attNameQC(strcmpi('flag_meanings',attNameQC),2);
+%                         flag_quality_control_conventions = attNameQC(strcmpi('quality_control_conventions',attNameQC),2);
+%                         
+%                     end
+%                     
+%                     dataset.variables.(variablesList{iiVar}).flag_meanings = flag_meanings;
+%                     dataset.variables.(variablesList{iiVar}).flag_values = flag_values;
+%                     dataset.variables.(variablesList{iiVar}).flag = dataQC;
+%                     dataset.variables.(variablesList{iiVar}).flag_quality_control_conventions = flag_quality_control_conventions;
+%                     dataset.variables.(variablesList{iiVar}).quality_control_set = quality_control_set;
+%                     
+%                 end
+%             end
+%         end
+%         
+%         
+%     end
+    for iiVar=1:length(variablesToExport)
         
-        ancillaryVariables_uncertainty = regexp(ancillaryVariables,'\w+uncertainty','match'); % this is not used yet ! in next version
-        ancillaryVariables_qc = regexp(ancillaryVariables,'\w+quality_control','match');
-        
-        if ~isempty(ancillaryVariables_qc)
+        %first we look for the variable attribute ancillary variables to see if
+        %it exists. If the field does not exist, then we try to look for the
+        %qc variable assuming its name is <variable>_quality_control
+        if isfield(dataset.variables.(variablesToExport{iiVar}),'ancillary_variables')
+            ancillaryVariables = dataset.variables.(variablesToExport{iiVar}).ancillary_variables;
             
+            ancillaryVariables_uncertainty = regexp(ancillaryVariables,'\w+uncertainty','match'); % this is not used yet ! in next version
+            ancillaryVariables_qc = regexp(ancillaryVariables,'\w+quality_control','match');
             
-            dataQC =  nctoolbox_datasetInfo.data(ancillaryVariables_qc{1});
-            attNameQC = nctoolbox_datasetInfo.attributes(ancillaryVariables_qc{1});
-            
-            if (sum(strcmpi('quality_control_set',attNameQC(:,1)) == 0))
-                quality_control_set = cell2mat(attNameQC(strcmpi('quality_control_set',attNameQC),2));
-            else
-                quality_control_set=1; %we assume it is IMOS
-            end
-            
-            % quality_control_set=1  =>1, IMOS standard set using the IODE flags,                 0 1 2 3 4 5 6 7 8 9,       byte, 99
-            % quality_control_set=2  =>2, ARGO quality control procedure,                         0 1 2 3 4 5 6 7 8 9,       byte, 99
-            % quality_control_set=3  =>3, BOM quality control procedure (SST and Air-Sea fluxes), B C D E F G H L T U V X Z, char, 0
-            
-            if quality_control_set == 1     %IMOS standard set using the IODE flags
-                flag_values = attNameQC(strcmpi('flag_values',attNameQC),2);
-                flag_meanings = attNameQC(strcmpi('flag_meanings',attNameQC),2);
-                flag_quality_control_conventions = attNameQC(strcmpi('quality_control_conventions',attNameQC),2);
+            if ~isempty(ancillaryVariables_qc)
                 
-                flag_values = flag_values{:};
-                flag_meanings = flag_meanings{:};
-                flag_quality_control_conventions = flag_quality_control_conventions{:};
-            elseif quality_control_set == 2 %ARGO quality control procedure
                 
-            elseif quality_control_set == 3 %BOM quality control procedure (SST and Air-Sea fluxes)
-                flag_values = attNameQC(strcmpi('quality_control_flag_values',attNameQC),2);
-                flag_meanings = attNameQC(strcmpi('quality_control_flag_meanings',attNameQC),2);
-                flag_quality_control_conventions = attNameQC(strcmpi('quality_control_conventions',attNameQC),2);
+                dataQC =  nctoolbox_datasetInfo.data(ancillaryVariables_qc{1});
+                attNameQC = nctoolbox_datasetInfo.attributes(ancillaryVariables_qc{1});
                 
-                flag_values = flag_values{:};
-                flag_meanings = flag_meanings{:};
-                flag_quality_control_conventions = flag_quality_control_conventions{:};
-            else %we assume it is IMOS
-                flag_values = attNameQC(strcmpi('flag_values',attNameQC),2);
-                flag_meanings = attNameQC(strcmpi('flag_meanings',attNameQC),2);
-                flag_quality_control_conventions = attNameQC(strcmpi('quality_control_conventions',attNameQC),2);
-                
-                flag_values = flag_values{:};
-                flag_meanings = flag_meanings{:};
-                flag_quality_control_conventions = flag_quality_control_conventions{:};
-            end
-            
-            dataset.variables.(variablesList{iiVar}).flag_meanings = flag_meanings;
-            dataset.variables.(variablesList{iiVar}).flag_values = flag_values;
-            dataset.variables.(variablesList{iiVar}).flag = dataQC;
-            dataset.variables.(variablesList{iiVar}).flag_quality_control_conventions = flag_quality_control_conventions;
-            dataset.variables.(variablesList{iiVar}).quality_control_set = quality_control_set;
-        end
-    else
-        try
-            ancillaryVariables_qc=strcat(variablesList{iiVar},'_quality_control');
-            if isempty(strfind(listVariables,ancillaryVariables_qc)) % if the variable name we just created is actually in the list of variables
-                dataQC =  nctoolbox_datasetInfo.data(ancillaryVariables_qc);
-                attNameQC = nctoolbox_datasetInfo.attributes(ancillaryVariables_qc);
-                quality_control_set = cell2mat(attNameQC(strcmpi('quality_control_set',attNameQC),2));
+                if (sum(strcmpi('quality_control_set',attNameQC(:,1)) == 0))
+                    quality_control_set = cell2mat(attNameQC(strcmpi('quality_control_set',attNameQC),2));
+                else
+                    quality_control_set=1; %we assume it is IMOS
+                end
                 
                 % quality_control_set=1  =>1, IMOS standard set using the IODE flags,                 0 1 2 3 4 5 6 7 8 9,       byte, 99
                 % quality_control_set=2  =>2, ARGO quality control procedure,                         0 1 2 3 4 5 6 7 8 9,       byte, 99
@@ -294,8 +392,11 @@ for iiVar=1:length(variablesList)
                 if quality_control_set == 1     %IMOS standard set using the IODE flags
                     flag_values = attNameQC(strcmpi('flag_values',attNameQC),2);
                     flag_meanings = attNameQC(strcmpi('flag_meanings',attNameQC),2);
-                    flag_quality_control_conventions=attNameQC(strcmpi('quality_control_conventions',attNameQC),2);
+                    flag_quality_control_conventions = attNameQC(strcmpi('quality_control_conventions',attNameQC),2);
                     
+                    flag_values = flag_values{:};
+                    flag_meanings = flag_meanings{:};
+                    flag_quality_control_conventions = flag_quality_control_conventions{:};
                 elseif quality_control_set == 2 %ARGO quality control procedure
                     
                 elseif quality_control_set == 3 %BOM quality control procedure (SST and Air-Sea fluxes)
@@ -311,21 +412,65 @@ for iiVar=1:length(variablesList)
                     flag_meanings = attNameQC(strcmpi('flag_meanings',attNameQC),2);
                     flag_quality_control_conventions = attNameQC(strcmpi('quality_control_conventions',attNameQC),2);
                     
+                    flag_values = flag_values{:};
+                    flag_meanings = flag_meanings{:};
+                    flag_quality_control_conventions = flag_quality_control_conventions{:};
                 end
                 
-                dataset.variables.(variablesList{iiVar}).flag_meanings = flag_meanings;
-                dataset.variables.(variablesList{iiVar}).flag_values = flag_values;
-                dataset.variables.(variablesList{iiVar}).flag = dataQC;
-                dataset.variables.(variablesList{iiVar}).flag_quality_control_conventions = flag_quality_control_conventions;
-                dataset.variables.(variablesList{iiVar}).quality_control_set = quality_control_set;
-                
+                dataset.variables.(variablesToExport{iiVar}).flag_meanings = flag_meanings;
+                dataset.variables.(variablesToExport{iiVar}).flag_values = flag_values;
+                dataset.variables.(variablesToExport{iiVar}).flag = dataQC;
+                dataset.variables.(variablesToExport{iiVar}).flag_quality_control_conventions = flag_quality_control_conventions;
+                dataset.variables.(variablesToExport{iiVar}).quality_control_set = quality_control_set;
+            end
+        else
+            try
+                ancillaryVariables_qc=strcat(variablesToExport{iiVar},'_quality_control');
+                if isempty(strfind(listVariables,ancillaryVariables_qc)) % if the variable name we just created is actually in the list of variables
+                    dataQC =  nctoolbox_datasetInfo.data(ancillaryVariables_qc);
+                    attNameQC = nctoolbox_datasetInfo.attributes(ancillaryVariables_qc);
+                    quality_control_set = cell2mat(attNameQC(strcmpi('quality_control_set',attNameQC),2));
+                    
+                    % quality_control_set=1  =>1, IMOS standard set using the IODE flags,                 0 1 2 3 4 5 6 7 8 9,       byte, 99
+                    % quality_control_set=2  =>2, ARGO quality control procedure,                         0 1 2 3 4 5 6 7 8 9,       byte, 99
+                    % quality_control_set=3  =>3, BOM quality control procedure (SST and Air-Sea fluxes), B C D E F G H L T U V X Z, char, 0
+                    
+                    if quality_control_set == 1     %IMOS standard set using the IODE flags
+                        flag_values = attNameQC(strcmpi('flag_values',attNameQC),2);
+                        flag_meanings = attNameQC(strcmpi('flag_meanings',attNameQC),2);
+                        flag_quality_control_conventions=attNameQC(strcmpi('quality_control_conventions',attNameQC),2);
+                        
+                    elseif quality_control_set == 2 %ARGO quality control procedure
+                        
+                    elseif quality_control_set == 3 %BOM quality control procedure (SST and Air-Sea fluxes)
+                        flag_values = attNameQC(strcmpi('quality_control_flag_values',attNameQC),2);
+                        flag_meanings = attNameQC(strcmpi('quality_control_flag_meanings',attNameQC),2);
+                        flag_quality_control_conventions = attNameQC(strcmpi('quality_control_conventions',attNameQC),2);
+                        
+                        flag_values = flag_values{:};
+                        flag_meanings = flag_meanings{:};
+                        flag_quality_control_conventions = flag_quality_control_conventions{:};
+                    else %we assume it is IMOS
+                        flag_values = attNameQC(strcmpi('flag_values',attNameQC),2);
+                        flag_meanings = attNameQC(strcmpi('flag_meanings',attNameQC),2);
+                        flag_quality_control_conventions = attNameQC(strcmpi('quality_control_conventions',attNameQC),2);
+                        
+                    end
+                    
+                    dataset.variables.(variablesToExport{iiVar}).flag_meanings = flag_meanings;
+                    dataset.variables.(variablesToExport{iiVar}).flag_values = flag_values;
+                    dataset.variables.(variablesToExport{iiVar}).flag = dataQC;
+                    dataset.variables.(variablesToExport{iiVar}).flag_quality_control_conventions = flag_quality_control_conventions;
+                    dataset.variables.(variablesToExport{iiVar}).quality_control_set = quality_control_set;
+                    
+                end
             end
         end
+        
+        
     end
-    
-    
-end
 
+end
 
 %warning, don't change the following order. It is important to clean first,
 %then to modify the values such as time. Otherwise there might be some
@@ -348,14 +493,22 @@ if ~strcmpi (parserOptionValue,'metadata')
         end
     end
     
-    for iiVar=1:length(variablesList)
-        if strcmpi( variablesList(iiVar), 'TIME')
-            timeUnits =  dataset.variables.(variablesList{iiVar}).units;
-            data = convertTimeToMatlab(dataset.variables.(variablesList{iiVar}).data,timeUnits);  %convert time
-            dataset.variables.(variablesList{iiVar}).data = data;
+    for iiVar=1:length(variablesToExport)
+        if strcmpi( variablesToExport(iiVar), 'TIME')
+            timeUnits =  dataset.variables.(variablesToExport{iiVar}).units;
+            data = convertTimeToMatlab(dataset.variables.(variablesToExport{iiVar}).data,timeUnits);  %convert time
+            dataset.variables.(variablesToExport{iiVar}).data = data;
             clear data
         end
     end
+%     for iiVar=1:length(variablesList)
+%         if strcmpi( variablesList(iiVar), 'TIME')
+%             timeUnits =  dataset.variables.(variablesList{iiVar}).units;
+%             data = convertTimeToMatlab(dataset.variables.(variablesList{iiVar}).data,timeUnits);  %convert time
+%             dataset.variables.(variablesList{iiVar}).data = data;
+%             clear data
+%         end
+%     end
 end
 
 %% add filename origine information
