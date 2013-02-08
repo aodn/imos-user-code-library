@@ -20,8 +20,7 @@ function dataset = netCDFParse (inputFileName,varargin)
 %
 %
 % Outputs:
-%    gattname         : array of string of attribute names
-%    gattval          : array of string of attribute values
+%    dataset         : struct
 %
 % Example:
 %   dataset = netCDFParse (inputFileName, 'parserOption' , [parserOption] , 'variable' , [varList] )
