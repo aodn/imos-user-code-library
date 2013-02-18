@@ -39,10 +39,10 @@ function dataset = netCDFParse (inputFileName,varargin)
 %
 % Other m-files required:
 % Other files required:nctoolbox, http://code.google.com/p/nctoolbox/
-% Subfunctions: none
+% Subfunctions: getErrorString
 % MAT-files required: none
 %
-% See also:
+% See also: outputCSV
 %
 % Author: Laurent Besnard, IMOS/eMII
 % email: laurent.besnard@utas.edu.au
@@ -426,7 +426,7 @@ if ~strcmpi (parserOptionValue,'metadata')
         else
             try
                 ancillaryVariables_qc=strcat(variablesToExport{iiVar},'_quality_control');
-                if isempty(strfind(listVariables,ancillaryVariables_qc)) % if the variable name we just created is actually in the list of variables
+                if  sum(~cellfun('isempty',strfind(listVariables,ancillaryVariables_qc))) > 0 % if the variable name we just created is actually in the list of variables
                     dataQC =  nctoolbox_datasetInfo.data(ancillaryVariables_qc);
                     attNameQC = nctoolbox_datasetInfo.attributes(ancillaryVariables_qc);
                     quality_control_set = cell2mat(attNameQC(strcmpi('quality_control_set',attNameQC),2));
@@ -440,6 +440,9 @@ if ~strcmpi (parserOptionValue,'metadata')
                         flag_meanings = attNameQC(strcmpi('flag_meanings',attNameQC),2);
                         flag_quality_control_conventions=attNameQC(strcmpi('quality_control_conventions',attNameQC),2);
                         
+                         flag_values = flag_values{:};
+                        flag_meanings = flag_meanings{:};
+                        flag_quality_control_conventions = flag_quality_control_conventions{:};
                     elseif quality_control_set == 2 %ARGO quality control procedure
                         
                     elseif quality_control_set == 3 %BOM quality control procedure (SST and Air-Sea fluxes)
@@ -454,6 +457,10 @@ if ~strcmpi (parserOptionValue,'metadata')
                         flag_values = attNameQC(strcmpi('flag_values',attNameQC),2);
                         flag_meanings = attNameQC(strcmpi('flag_meanings',attNameQC),2);
                         flag_quality_control_conventions = attNameQC(strcmpi('quality_control_conventions',attNameQC),2);
+                        
+                         flag_values = flag_values{:};
+                        flag_meanings = flag_meanings{:};
+                        flag_quality_control_conventions = flag_quality_control_conventions{:};
                         
                     end
                     
