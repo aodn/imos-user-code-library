@@ -20,7 +20,7 @@ Contents:
 		
 		If you want nctoolbox to be available each time you start Matlab, go to File->Set path and click Save
 	
-	1.3 description
+	1.3 Description
 		netCDFParse is the core of the “IMOS user code library”. This function parses a NetCDF file, wether from 
 		a local address or an OPeNDAP URL, and loads its content into the MATLAB workspace
 
