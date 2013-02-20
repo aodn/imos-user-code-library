@@ -62,8 +62,8 @@ if ~isstruct(dataset),          error('dataset must be a structure');        end
 % initialise the optional arguments
 if ispc
     folderOutput= getenv('USERPROFILE');
-elseif isunix
-    folderOutput= getenv('HOME');
+elseif isunix || ismac
+    folderOutput= getenv('HOME');   
 end
 variableListUser = [];
 
