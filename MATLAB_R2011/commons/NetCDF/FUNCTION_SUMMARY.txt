@@ -34,6 +34,9 @@ Contents:
 	1.4 Use example
 		netCDFParse('/path/to/netcdfFile.nc')
 
+		url = 'http://opendap-vpac.arcs.org.au/thredds/dodsC/IMOS/ANMN/NSW/PH100/Temperature/IMOS_ANMN-NSW_TE_20091029T025500Z_PH100_FV01_PH100-0910-Aqualogger-520T-40_END-20091223T000500Z_C-20111216T031406Z.nc';
+		dataset = netCDFParse (url)
+
 	1.5 Known Issues
 	
 	1.6 Contact
