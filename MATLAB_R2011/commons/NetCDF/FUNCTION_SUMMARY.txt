@@ -10,6 +10,7 @@ Contents:
 
 	1.2 Dependencies
 		This function requires the nctoolbox available at http://code.google.com/p/nctoolbox/ to be installed.
+		It has been tested successfuly with the 2013-03-05 and 2009-11-12 versions.		
 		The installation is as follow:
 
 		In Matlab, change to the nctoolbox directory. For example:
