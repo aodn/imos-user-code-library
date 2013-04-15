@@ -3,7 +3,7 @@ GIVES A SHORT DESCRIPTION AND A HOWTO
 
 Contents:
 
-1 netCDFParse
+1 ncParse
 
 	1.1 Installation
 		To install the file, simply add it to the path of your matlab path
@@ -29,14 +29,14 @@ Contents:
 
 	
 	1.3 Description
-		netCDFParse is the core of the “IMOS user code library”. This function parses a NetCDF file, wether from 
+		ncParse is the core of the “IMOS user code library”. This function parses a NetCDF file, wether from 
 		a local address or an OPeNDAP URL, and harvests its entire content into the MATLAB workspace
 
 	1.4 Use example
-		netCDFParse('/path/to/netcdfFile.nc')
+		ncParse('/path/to/netcdfFile.nc')
 
 		url = 'http://opendap-vpac.arcs.org.au/thredds/dodsC/IMOS/ANMN/NSW/PH100/Temperature/IMOS_ANMN-NSW_TE_20091029T025500Z_PH100_FV01_PH100-0910-Aqualogger-520T-40_END-20091223T000500Z_C-20111216T031406Z.nc';
-		dataset = netCDFParse (url)
+		dataset = ncParse (url)
 
 	1.5 Known Issues
 	
@@ -54,11 +54,11 @@ Contents:
 		mkpath in ../std . 
 
 	1.3 Description
-		outputCSV export data ouput from netCDFParse into a csv file.
+		outputCSV export data ouput from ncParse into a csv file.
 
 	1.4 Use example
 		url = 'http://opendap-vpac.arcs.org.au/thredds/dodsC/IMOS/ANMN/NSW/PH100/Temperature/IMOS_ANMN-NSW_TE_20091029T025500Z_PH100_FV01_PH100-0910-Aqualogger-520T-40_END-20091223T000500Z_C-20111216T031406Z.nc';
-		dataset = netCDFParse (url)
+		dataset = ncParse (url)
 		outputCSV(dataset ,'varList',{'TEMP'},'folderOutput','~/CSV_folder')
 
 	1.5 Known Issues
