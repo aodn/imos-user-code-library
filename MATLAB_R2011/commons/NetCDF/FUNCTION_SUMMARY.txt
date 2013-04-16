@@ -35,7 +35,7 @@ Contents:
 	1.4 Use example
 		ncParse('/path/to/netcdfFile.nc')
 
-		url = 'http://opendap-vpac.arcs.org.au/thredds/dodsC/IMOS/ANMN/NSW/PH100/Temperature/IMOS_ANMN-NSW_TE_20091029T025500Z_PH100_FV01_PH100-0910-Aqualogger-520T-40_END-20091223T000500Z_C-20111216T031406Z.nc';
+		url = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/ANMN/NSW/PH100/Temperature/IMOS_ANMN-NSW_TE_20091029T025500Z_PH100_FV01_PH100-0910-Aqualogger-520T-40_END-20091223T000500Z_C-20111216T031406Z.nc';
 		dataset = ncParse (url)
 
 	1.5 Known Issues
@@ -57,7 +57,7 @@ Contents:
 		outputCSV export data ouput from ncParse into a csv file.
 
 	1.4 Use example
-		url = 'http://opendap-vpac.arcs.org.au/thredds/dodsC/IMOS/ANMN/NSW/PH100/Temperature/IMOS_ANMN-NSW_TE_20091029T025500Z_PH100_FV01_PH100-0910-Aqualogger-520T-40_END-20091223T000500Z_C-20111216T031406Z.nc';
+		url = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/ANMN/NSW/PH100/Temperature/IMOS_ANMN-NSW_TE_20091029T025500Z_PH100_FV01_PH100-0910-Aqualogger-520T-40_END-20091223T000500Z_C-20111216T031406Z.nc';
 		dataset = ncParse (url)
 		outputCSV(dataset ,'varList',{'TEMP'},'folderOutput','~/CSV_folder')
 
