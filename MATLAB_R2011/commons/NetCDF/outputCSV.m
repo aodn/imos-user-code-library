@@ -1,8 +1,8 @@
 function outputCSV(dataset, varargin)
-%%outputCSV export data ouput from netCDFParse into a csv file.
+%%outputCSV export data ouput from ncParse into a csv file.
 % 
 % A NetCDF file can be parsed into the working environment of the programing language used by a
-% user with the function netCDFParse. Outputting a parsed NetCDF into a CSV file (comma-
+% user with the function ncParse. Outputting a parsed NetCDF into a CSV file (comma-
 % separated values), with options defined by the user, can be performed with the function outputCSV
 % described in this section.
 % The exported CSV file will have the same information as one can find in the original NetCDF file:
@@ -16,7 +16,7 @@ function outputCSV(dataset, varargin)
 % 
 % 
 % Inputs:
-%    dataset : output from the function netCDFParse
+%    dataset : output from the function ncParse
 %    
 %   'varList' is an optional input : needs to be followed by a string of
 %            variable names found in dataset.variables, such as
@@ -34,7 +34,7 @@ function outputCSV(dataset, varargin)
 % Example:
 %
 % url = 'http://opendap-vpac.arcs.org.au/thredds/dodsC/IMOS/ANMN/NSW/PH100/Temperature/IMOS_ANMN-NSW_TE_20091029T025500Z_PH100_FV01_PH100-0910-Aqualogger-520T-40_END-20091223T000500Z_C-20111216T031406Z.nc';
-% dataset = netCDFParse (url)
+% dataset = ncParse (url)
 % • outputCSV(dataset ,'varList',{'TEMP'})
 % • outputCSV(dataset ,'varList',{'TEMP','DEPTH'})
 % • outputCSV(dataset ,'varList',{'TEMP'},'folderOutput','~/testCSV')
@@ -46,7 +46,7 @@ function outputCSV(dataset, varargin)
 % Subfunctions: mkpath
 % MAT-files required: none
 %
-% See also: netCDFParse
+% See also: ncParse
 %
 % Author: Laurent Besnard, IMOS/eMII
 % email: laurent.besnard@utas.edu.au
@@ -233,7 +233,7 @@ function writeGlobAtt(dataset,filenameOutput)
 % 
 % 
 % Inputs:
-%    dataset : structure from netCDFParse
+%    dataset : structure from ncParse
 %    filenameOutput : filename of the CSV file
 %
 %   Outputs:
@@ -273,7 +273,7 @@ function outputCSV_1D (dataset,mainDimension,variableToExport_1D,folderOutput)
 %%outputCSV_1D sub function of outputCSV. Only for variables of a 1D type.
 % 
 % Inputs:
-%    dataset : structure from netCDFParse
+%    dataset : structure from ncParse
 %    mainDimension : filename of the CSV file
 %    variableToExport_1D
 %    folderOutput
