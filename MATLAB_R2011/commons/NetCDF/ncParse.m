@@ -400,7 +400,7 @@ if ~strcmpi (parserOptionValue,'metadata')
     end
     
     for iiVar=1:length(variablesToExport)
-        if strcmpi( variablesToExport(iiVar), 'TIME')
+        if strcmpi( variablesToExport(iiVar), 'TIME') || strcmpi( variablesToExport(iiVar), 'JULD')
             timeUnits =  dataset.variables.(variablesToExport{iiVar}).units;
             data = convertTimeToMatlab(dataset.variables.(variablesToExport{iiVar}).data,timeUnits);  %convert time
             dataset.variables.(variablesToExport{iiVar}).data = data;
