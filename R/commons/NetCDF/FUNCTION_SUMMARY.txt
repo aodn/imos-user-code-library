@@ -9,18 +9,24 @@ Contents:
 		To be able to use the ncParse function, simply source the ncParse.R file from its known location.
 
 	1.2 Dependencies
-		This function requires the ncdf4 package to be installed. This ncdf4 library and the associated installation procedure is available at: http://cirrus.ucsd.edu/~pierce/ncdf/
+		This function requires the ncdf4 package to be installed. This ncdf4 library and the associated 
+		installation procedure is available at: http://cirrus.ucsd.edu/~pierce/ncdf/
 
 	1.3 Description
-		ncParse is the core of the ÒIMOS user code libraryÓ. This function parses a NetCDF file from a local address or an OPeNDAP URL, and harvests its entire content into the MATLAB workspace
+		ncParse is the core of the ï¿½IMOS user code libraryï¿½. This function parses a NetCDF file from a local a
+		ddress or an OPeNDAP URL, and harvests its entire content into the MATLAB workspace
 
 	1.4 Usage
 		ncParse( inputFileName, parserOption = NA, variables = NA)
 
 	1.5 Arguments
 		inputFileName : OPeNDAP URL or local address of the NetCDF file.
-		parserOption : Character string indicating whether to retrieve the entire content of the NetCDF file or only the metadata. If parserOption = 'all' or NA or is omitted (default) then the parser retrieves the entire file, if parserOption = 'metadata' then the parser retrieves metadata only.
-		variables :  Character string indicating whether to parse metadata (and data if parserOption = 'all' or NA or omitted) for all variables (if variables = NA or is omitted, default) or only a specified set of variables (e.g. c('TEMP','PSAL')).
+		parserOption : Character string indicating whether to retrieve the entire content of the NetCDF file or 
+		only the metadata. If parserOption = 'all' or NA or is omitted (default) then the parser retrieves the 
+		entire file, if parserOption = 'metadata' then the parser retrieves metadata only.
+		variables :  Character string indicating whether to parse metadata 
+		(and data if parserOption = 'all' or NA or omitted) for all variables 
+		(if variables = NA or is omitted, default) or only a specified set of variables (e.g. c('TEMP','PSAL')).
 
 	1.6 Value
 		Returns a list of three sub-lists containing all the information stored in the original NetCDF file. 
@@ -33,13 +39,15 @@ Contents:
 		library ( ncdf4)
 
 		## Source ncParse.R file
-		source ( Ô/path/to/ncParse.RÕ)
+		source ( ï¿½/path/to/ncParse.Rï¿½)
 
 		## Parse all data and metadata from a local NetCDF ## file
 		dataset <- ncParse( '/path/to/netcdfFile.nc')
 
 		## Parse all data and metadata from a NetCDF file ## on OPeNDAP
-		url = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/ANMN/NSW/PH100/Temperature/IMOS_ANMN-NSW_TE_20091029T025500Z_PH100_FV01_PH100-0910-Aqualogger-520T-40_END-20091223T000500Z_C-20111216T031406Z.nc';
+		url = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/ANMN/NSW/PH100/Temperature/
+		IMOS_ANMN-NSW_TE_20091029T025500Z_PH100_FV01_PH100-0910-Aqualogger-520T-40_END-20091223T000500Z_C-
+		20111216T031406Z.nc';
 
 		dataset = ncParse ( url)
 
