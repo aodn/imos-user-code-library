@@ -16,21 +16,26 @@ ncParse <- function( inputFileName, parserOption, variables){
 # Arguments
 #
 # inputFileName : OPeNDAP URL or local address of the NetCDF file.
-# parserOption : Character string indicating whether to retrieve the entire content of the NetCDF file or only the metadata. If parserOption = 'all' or NA or is omitted (default) then the parser retrieves the entire file, 
+# parserOption : Character string indicating whether to retrieve the entire content of the NetCDF file or 
+# only the metadata. If parserOption = 'all' or NA or is omitted (default) then the parser retrieves the entire file, 
 # if parserOption = 'metadata' then the parser retrieves metadata only.
-# variables :  Character string indicating whether to parse metadata (and data if parserOption = 'all' or NA or omitted) for all variables (if variables = NA or is omitted, default) or only a specified set of variables (e.g. c('TEMP','PSAL')). 
+# variables :  Character string indicating whether to parse metadata (and data if parserOption = 'all' or NA or omitted) 
+# for all variables (if variables = NA or is omitted, default) or only a specified set of variables (e.g. c('TEMP','PSAL')). 
 #
 #
 # Details
 #
-# The ncParse function is the core of the "IMOS user code library". This function parses a NetCDF file from a local address or an OPeNDAP URL, and harvests its entire 
+# The ncParse function is the core of the "IMOS user code library". This function parses a NetCDF file from a 
+# local address or an OPeNDAP URL, and harvests its entire 
 # content into the workspace.
 #
 #
 # Value
 # 
-# Returns a list of three sub-lists containing all the information stored in the original NetCDF file. The 'metadata' sub-list stores all the global attributes of the NetCDF file, the 'dimensions' sub-list stores all the information 
-# regarding the different dimensions of the NetCDF file, the 'variables' sub-list stores all the data and attributes information of the NetCDF file. 
+# Returns a list of three sub-lists containing all the information stored in the original NetCDF file. 
+# The 'metadata' sub-list stores all the global attributes of the NetCDF file, the 'dimensions' sub-list stores all the 
+# information regarding the different dimensions of the NetCDF file, the 'variables' sub-list stores all the 
+# data and attributes information of the NetCDF file. 
 #
 #
 # Author
@@ -51,7 +56,8 @@ ncParse <- function( inputFileName, parserOption, variables){
 #
 # See also
 # 
-# Additional information about the procedures used to create this NetCDF parser can be found at: https://github.com/aodn/imos_user_code_library/blob/master/IMOS_user_code_library.pdf
+# Additional information about the procedures used to create this NetCDF parser can be found at: 
+# https://github.com/aodn/imos_user_code_library/blob/master/IMOS_user_code_library.pdf
 #
 #
 # Example
