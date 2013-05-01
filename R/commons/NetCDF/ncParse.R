@@ -170,9 +170,9 @@ for ( v in 1:length( dimvarnames)){
 		}
 
 	##### Convert time values into dates
-	if ( ( dimvarnames[v] == "TIME" | dimvarnames[v] == "JULD" | dimvarnames[v] == "JULD_LOCATION") == TRUE && (length( grep( "days", ncatt_get( ncdf, dimvarnames[v], "units"))) == 1) == TRUE) unit <- 3600*24 else
-	if ( (dimvarnames[v] == "TIME" | dimvarnames[v] == "JULD" | dimvarnames[v] == "JULD_LOCATION") == TRUE && (length( grep( "hours", ncatt_get( ncdf, dimvarnames[v], "units"))) == 1) == TRUE) unit <- 3600 else unit <- 1
-	if ( dimvarnames[v] == "TIME" | dimvarnames[v] == "JULD" | dimvarnames[v] == "JULD_LOCATION" ) data <- as.POSIXlt( data*unit, origin = strsplit( ncatt_get( ncdf, dimvarnames[v], "units")$value,split=' ')[[1]][3], tz="UTC")	
+	if ( ( dimvarnames[v] == "TIME" | dimvarnames[v] == "time" | dimvarnames[v] == "JULD" | dimvarnames[v] == "JULD_LOCATION") == TRUE && (length( grep( "days", ncatt_get( ncdf, dimvarnames[v], "units"))) == 1) == TRUE) unit <- 3600*24 else
+	if ( (dimvarnames[v] == "TIME" | dimvarnames[v] == "time" | dimvarnames[v] == "JULD" | dimvarnames[v] == "JULD_LOCATION") == TRUE && (length( grep( "hours", ncatt_get( ncdf, dimvarnames[v], "units"))) == 1) == TRUE) unit <- 3600 else unit <- 1
+	if ( dimvarnames[v] == "TIME" | dimvarnames[v] == "time" | dimvarnames[v] == "JULD" | dimvarnames[v] == "JULD_LOCATION" ) data <- as.POSIXlt( data*unit, origin=strsplit(ncatt_get( ncdf, dimvarnames[v], "units")$value,split=' ')[[1]][3], tz="UTC")
 	##### Extract data from dimensions and variables
 	if ( parserOption != "metadata" && parserOption != "all") stop( "parserOption value invalid")
 	if ( parserOption == "metadata" && dimvartype[v] == "Dimension") dataset$dimensions[[dimvarnames[v]]] <- list()
