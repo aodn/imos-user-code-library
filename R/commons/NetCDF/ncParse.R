@@ -164,7 +164,10 @@ for ( v in 1:length( dimvarnames)){
 		for ( j in 2:length( dimid)){
 			dimension <- c( dimension, ncdf$dim[dimid[j]+1][[1]]$name)
 		}
-	}}} else { natts <- 0}
+	}}} else {
+		natts <- 0
+		data <- ncdf$dim[[v]]$len
+		}
 
 	##### Convert time values into dates
 	if ( ( dimvarnames[v] == "TIME" | dimvarnames[v] == "JULD" | dimvarnames[v] == "JULD_LOCATION") == TRUE && (length( grep( "days", ncatt_get( ncdf, dimvarnames[v], "units"))) == 1) == TRUE) unit <- 3600*24 else
@@ -174,7 +177,7 @@ for ( v in 1:length( dimvarnames)){
 	if ( parserOption != "metadata" && parserOption != "all") stop( "parserOption value invalid")
 	if ( parserOption == "metadata" && dimvartype[v] == "Dimension") dataset$dimensions[[dimvarnames[v]]] <- list()
 	if ( parserOption == "metadata" && dimvartype[v] == "Variable") dataset$variables[[dimvarnames[v]]] <- list( dimensions = dimension)
-	if ( parserOption == "all" && dimvartype[v] == "Dimension") dataset$dimensions[[dimvarnames[v]]] <- list( data = if( length( ncatt_get( ncdf, dimvarnames[v])) > 0) { data})
+	if ( parserOption == "all" && dimvartype[v] == "Dimension") dataset$dimensions[[dimvarnames[v]]] <- list( data = data)
 	if ( parserOption == "all" && dimvartype[v] == "Variable") dataset$variables[[dimvarnames[v]]] <- list(dimensions = dimension, data = data)
 	if ( length( ncatt_get( ncdf, dimvarnames[v])) > 0) { for ( j in 1:length( ncatt_get( ncdf, dimvarnames[v]))){
 		if ( dimvartype[v] == "Dimension") dataset$dimensions[[dimvarnames[v]]][[dimnames( summary( ncatt_get( ncdf, dimvarnames[v])))[[1]][j]]] <- ncatt_get( ncdf, dimvarnames[v])[[j]]
