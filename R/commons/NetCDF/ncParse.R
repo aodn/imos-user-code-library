@@ -153,7 +153,7 @@ if ( ncdf$natts > 0) {
 	}
 
 for ( v in 1:length( dimvarnames)){
-	if( length( ncatt_get( ncdf, dimvarnames[v]))>0) {
+	if( length( ncatt_get( ncdf, dimvarnames[v])) > 0) {
 	data <- ncvar_get( ncdf, dimvarnames[v])
 	natts <- varinfos[[which(( names( varinfos)) == dimvarnames[v])]]$natts
 	dimid <- varinfos[[which(( names( varinfos)) == dimvarnames[v])]]$dimids
@@ -166,7 +166,9 @@ for ( v in 1:length( dimvarnames)){
 		}
 	}}} else {
 		natts <- 0
-		data <- ncdf$dim[[v]]$len
+		if( length(varinfos[[which(( names( varinfos)) == dimvarnames[v])]]$dimids) > 0) data <- ncvar_get( ncdf, dimvarnames[v]) else data <- ncdf$dim[[v]]$len
+		if( length(varinfos[[which(( names( varinfos)) == dimvarnames[v])]]$dimids) > 0) dimid <- varinfos[[which(( names( varinfos)) == dimvarnames[v])]]$dimids
+		if( length(varinfos[[which(( names( varinfos)) == dimvarnames[v])]]$dimids) > 0) dimension <- ncdf$dim[dimid[1]+1][[1]]$name
 		}
 
 	##### Convert time values into dates
