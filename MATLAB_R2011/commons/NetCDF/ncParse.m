@@ -171,7 +171,13 @@ for iiVar=1:length(variablesToExport)
     if ~strcmpi (parserOptionValue,'metadata')
         if sum( strcmpi(variablesChoosenByUser, (variablesToExport{iiVar})) ~= 0)
             
-            data =  nctoolbox_datasetInfo.data(variablesToExport(iiVar));
+            data =  (nctoolbox_datasetInfo.data(variablesToExport(iiVar)));
+            
+            if isnumeric(data)
+                data = single(data);
+            elseif ischar(data)
+                %nothing to do
+            end
             
             dataset.variables.(variablesToExport{iiVar}).data = data;
             clear data
@@ -246,12 +252,31 @@ for iiDim=1:length(dimensionsList)
         
         if  sum(strcmp(listVariables,dimensionsList{iiDim})) ~= 0 % means if there is no data for this dimension
             data =  nctoolbox_datasetInfo.data(dimensionsList(iiDim));
+            
+            
+            if isnumeric(data)
+                data = single(data);
+            elseif ischar(data)
+                %nothing to do
+            end
             dataset.dimensions.(dimensionsList{iiDim}).data = data;
             
         else
             
-            data = ( 1:dimensionsSize( strcmpi(dimensionsNames,dimensionsList{iiDim})))';
-            dataset.dimensions.(dimensionsList{iiDim}).data = data;
+            if dimensionsSize( strcmpi(dimensionsNames,dimensionsList{iiDim})) < power(2,8)
+                data = uint8( 1:dimensionsSize( strcmpi(dimensionsNames,dimensionsList{iiDim})))';
+            
+            elseif dimensionsSize( strcmpi(dimensionsNames,dimensionsList{iiDim})) > power(2,8) &&  dimensionsSize( strcmpi(dimensionsNames,dimensionsList{iiDim})) < power(2,16)
+                data = uint16( 1:dimensionsSize( strcmpi(dimensionsNames,dimensionsList{iiDim})))';
+            
+            elseif dimensionsSize( strcmpi(dimensionsNames,dimensionsList{iiDim})) > power(2,16) &&  dimensionsSize( strcmpi(dimensionsNames,dimensionsList{iiDim})) < power(2,32)
+                data = uint32( 1:dimensionsSize( strcmpi(dimensionsNames,dimensionsList{iiDim})))';
+            
+            else
+                data = ( 1:dimensionsSize( strcmpi(dimensionsNames,dimensionsList{iiDim})))';
+            end
+            
+                dataset.dimensions.(dimensionsList{iiDim}).data = data;
         end
         
         
@@ -277,11 +302,21 @@ if ~strcmpi (parserOptionValue,'metadata')
             if ~isempty(ancillaryVariables_qc)
                 
                 
-                dataQC =  nctoolbox_datasetInfo.data(ancillaryVariables_qc{1});
+                dataQC =  (nctoolbox_datasetInfo.data(ancillaryVariables_qc{1}));
+                
+                if length(dataQC) < power(2,8)
+                    dataQC=uint8(dataQC);
+                elseif length(dataQC) < power(2,16) && length(dataQC) > power(2,8)
+                    dataQC=uint16(dataQC);
+                elseif length(dataQC) < power(2,32) && length(dataQC) > power(2,16)
+                    dataQC=uint32(dataQC);
+                end
+                
+                
                 attNameQC = nctoolbox_datasetInfo.attributes(ancillaryVariables_qc{1});
                 
                 if (sum(strcmpi('quality_control_set',attNameQC(:,1)) == 0))
-                    quality_control_set = cell2mat(attNameQC(strcmpi('quality_control_set',attNameQC),2));
+                    quality_control_set = uint8(cell2mat(attNameQC(strcmpi('quality_control_set',attNameQC),2)));
                 else
                     quality_control_set=1; %we assume it is IMOS
                 end
@@ -328,9 +363,18 @@ if ~strcmpi (parserOptionValue,'metadata')
             try
                 ancillaryVariables_qc=strcat(variablesToExport{iiVar},'_quality_control');
                 if  sum(~cellfun('isempty',strfind(listVariables,ancillaryVariables_qc))) > 0 % if the variable name we just created is actually in the list of variables
-                    dataQC =  nctoolbox_datasetInfo.data(ancillaryVariables_qc);
+                    dataQC =  (nctoolbox_datasetInfo.data(ancillaryVariables_qc));
+                    
+                    if length(dataQC) < power(2,8)
+                        dataQC=uint8(dataQC);
+                    elseif length(dataQC) < power(2,16) && length(dataQC) > power(2,8)
+                        dataQC=uint16(dataQC);
+                    elseif length(dataQC) < power(2,32) && length(dataQC) > power(2,16)
+                        dataQC=uint32(dataQC);
+                    end
+                
                     attNameQC = nctoolbox_datasetInfo.attributes(ancillaryVariables_qc);
-                    quality_control_set = cell2mat(attNameQC(strcmpi('quality_control_set',attNameQC),2));
+                    quality_control_set = uint8(cell2mat(attNameQC(strcmpi('quality_control_set',attNameQC),2)));
                     
                     % quality_control_set=1  =>1, IMOS standard set using the IODE flags,                 0 1 2 3 4 5 6 7 8 9,       byte, 99
                     % quality_control_set=2  =>2, ARGO quality control procedure,                         0 1 2 3 4 5 6 7 8 9,       byte, 99
