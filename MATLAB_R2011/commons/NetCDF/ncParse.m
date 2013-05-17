@@ -128,6 +128,8 @@ for iiVar=1:length(listVariables_NOQC)
     otherDimension = cat(1, otherDimension , nctoolbox_datasetInfo.dimensions(listVariables_NOQC(iiVar)));
 end
 
+otherDimension = strrep(otherDimension,'"',''); % it appeared while testing on a windows machine, that calling nctoolbox_datasetInfo.dimensions would put double quotes around dimensions names. Creating therefor a conflict later on when creating the structure
+
 if exist('dimensionsList','var')
     dimensionsList = unique(cat(1,otherDimension,dimensionsList'));
 else
