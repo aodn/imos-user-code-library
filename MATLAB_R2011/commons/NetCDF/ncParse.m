@@ -15,6 +15,9 @@ function dataset = ncParse (inputFileName,varargin)
 %     [parserOption]   'all'       => to retrieve the entire file
 %                      'metadata'  => to retrieve metadata only
 %
+%    'geoBoundaryBox', [minLon maxLon minLat maxLat] only work when a variable lat* or
+%    lon* are dimensions and not variables. regexpi on lat so the latitude
+%    can be either lat Lat LAT LATITUDE ...
 %
 %    'varList' , [varList]   => Parse only a specified set of variables
 %
@@ -79,7 +82,8 @@ if optargin > 0
             geoBoundaryBox = varargin{ii_optargin+1};
             
             if (geoBoundaryBox(2) < geoBoundaryBox(1)) ||  (geoBoundaryBox(4) < geoBoundaryBox(3))
-                error('geoBoundaryBox was badly written [minlon maxlon minlat maxlat] ');
+                warning('geoBoundaryBox was badly written [minlon maxlon minlat maxlat]. Subsetting is cancelled ');
+                clear geoBoundaryBox
             end
             
         else  error('%s is not a valid option',varargin{ii_optargin});
@@ -199,8 +203,8 @@ for iiDim=1:length(dimensionsList)
         
         if  sum(strcmp(listVariables,dimensionsList{iiDim})) ~= 0
             
-            if exist('geoBoundaryBox','var') && strcmpi('lat',dimensionsList{iiDim})
-                latFullGrid = nctoolbox_datasetInfo.data(dimensionsList(strcmpi('lat',dimensionsList)));
+            if exist('geoBoundaryBox','var') & regexpi(dimensionsList{iiDim},'lat')
+                latFullGrid = nctoolbox_datasetInfo.data(dimensionsList( ~cellfun('isempty',regexpi(dimensionsList,'lat')) ));
                 indexLat = latFullGrid >=  geoBoundaryBox(3) &  latFullGrid <=  geoBoundaryBox(4);
                 latToKeep = latFullGrid(indexLat);
                 if isempty(latToKeep)
@@ -208,10 +212,17 @@ for iiDim=1:length(dimensionsList)
                 end
                 data = latToKeep;
                 
-            elseif  exist('geoBoundaryBox','var') && strcmpi('lon',dimensionsList{iiDim})
-                lonFullGrid = nctoolbox_datasetInfo.data(dimensionsList(strcmpi('lon',dimensionsList)));
+            elseif  exist('geoBoundaryBox','var') & regexpi(dimensionsList{iiDim},'lon')
+                lonFullGrid = nctoolbox_datasetInfo.data(dimensionsList( ~cellfun('isempty',regexpi(dimensionsList,'lon')) ));
+                lonFullGrid_bckp = lonFullGrid;
+                % we need to transform lon values in case they go from -180
+                % to 180. we prefer 0 to 360 for geoBoundaryBox
+                lonFullGrid (lonFullGrid<0) = lonFullGrid (lonFullGrid<0) +360;
                 indexLon = lonFullGrid >=  geoBoundaryBox(1) &  lonFullGrid <=  geoBoundaryBox(2);
+                % but we don't want to change the values , so >
+                lonFullGrid = lonFullGrid_bckp;
                 lonToKeep = lonFullGrid(indexLon);
+                
                 if isempty(lonToKeep)
                     warning('No data found in geoBoundaryBox. subset is cancelled : all data is harvested');
                 end
@@ -254,12 +265,18 @@ for iiDim=1:length(dimensionsList)
     clear data
 end
 
-if isempty(lonToKeep) ||   isempty(latToKeep)
-    clear  geoBoundaryBox
-    % we do this in case we had a warning above saying lonToKeep or
-    % latToKeep were empty
+if exist('geoBoundaryBox','var')
+    if exist('lonToKeep','var') || exist('latToKeep','var')
+        if isempty(lonToKeep) ||   isempty(latToKeep)
+            clear  geoBoundaryBox
+            % we do this in case we had a warning above saying lonToKeep or
+            % latToKeep were empty
+            
+        end
+    else
+        clear  geoBoundaryBox
+    end
 end
-
 %% get variables , only QC ones
 for iiVar=1:length(variablesToExport)
     
