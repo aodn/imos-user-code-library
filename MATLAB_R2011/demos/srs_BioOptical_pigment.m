@@ -1,3 +1,13 @@
+%% Example to plot a SRS BioOptical Pigment dataset
+%
+% Author: Laurent Besnard, IMOS/eMII
+% email: laurent.besnard@utas.edu.au
+% Website: http://imos.org.au/  https://github.com/aodn/imos_user_code_library
+% May 2013; Last revision: 20-May-2013
+%
+% Copyright 2013 IMOS
+% The script is distributed under the terms of the GNU General Public License
+
 srs_URL = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/eMII/demos/SRS/BioOptical/1997_cruise-FR1097/pigment/IMOS_SRS-OC-BODBAW_X_19971201T052600Z_FR1097-pigment_END-19971207T220700Z_C-20121129T120000Z.nc' ;
 srs_DATA = ncParse(srs_URL) ;
  

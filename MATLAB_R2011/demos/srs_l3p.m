@@ -1,3 +1,13 @@
+%% Example to plot a SRS L3P dataset
+%
+% Author: Laurent Besnard, IMOS/eMII
+% email: laurent.besnard@utas.edu.au
+% Website: http://imos.org.au/  https://github.com/aodn/imos_user_code_library
+% May 2013; Last revision: 20-May-2013
+%
+% Copyright 2013 IMOS
+% The script is distributed under the terms of the GNU General Public License
+
 srs_URL = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/eMII/demos/SRS/SRS-SST/L3P/2013/20130315-ABOM-L3P_GHRSST-SSTsubskin-AVHRR_MOSAIC_01km-AO_DAAC-v01-fv01_0.nc' ;
 srsL3P_DATA = ncParse(srs_URL) ;
  

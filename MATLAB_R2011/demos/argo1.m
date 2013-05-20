@@ -1,3 +1,13 @@
+%% Example to plot a ARGO dataset
+%
+% Author: Laurent Besnard, IMOS/eMII
+% email: laurent.besnard@utas.edu.au
+% Website: http://imos.org.au/  https://github.com/aodn/imos_user_code_library
+% May 2013; Last revision: 20-May-2013
+%
+% Copyright 2013 IMOS
+% The script is distributed under the terms of the GNU General Public License
+
 argo_URL = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/eMII/demos/Argo/aggregated_datasets/south_pacific/IMOS_Argo_TPS-20020101T000000_FV01_yearly-aggregation-South_Pacific_C-20121102T220000Z.nc';
 argo_DATA = ncParse(argo_URL) ;
  

@@ -1,5 +1,15 @@
+%% Example to plot a SRS L3S dataset
+%
+% Author: Laurent Besnard, IMOS/eMII
+% email: laurent.besnard@utas.edu.au
+% Website: http://imos.org.au/  https://github.com/aodn/imos_user_code_library
+% May 2013; Last revision: 20-May-2013
+%
+% Copyright 2013 IMOS
+% The script is distributed under the terms of the GNU General Public License
+
 srs_URL = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/eMII/demos/SRS/SRS-SST/L3S-01day/L3S_1d_night/2013/20130401152000-ABOM-L3S_GHRSST-SSTskin-AVHRR_D-1d_night-v02.0-fv01.0.nc.gz';
-srsL3S_DATA = ncParse(srs_URL) ;
+srsL3S_DATA = ncParse2(srs_URL) ;
  
 step = 10; % we take one point out of 'step'. Only to make it faster to plot on Matlab
 % squeeze the data to get rid of the time dimension in the variable shape 

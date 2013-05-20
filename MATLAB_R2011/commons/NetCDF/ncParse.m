@@ -173,8 +173,11 @@ for iiVar=1:length(variablesToExport)
             
             data =  (nctoolbox_datasetInfo.data(variablesToExport(iiVar)));
             
-            if isnumeric(data)
+            if isnumeric(data) && ~(strcmpi('time',variablesToExport{iiVar}) ...
+                    || strcmpi('JULD',variablesToExport{iiVar}) ) % basically, if it's a normal dimension and not a time dimension, then we change the type from double to single
                 data = single(data);
+            elseif    strcmpi('flags',variablesToExport{iiVar}) || strcmpi('quality_level',variablesToExport{iiVar}) % for SRS GHRSST variables
+                data = uint(data);
             elseif ischar(data)
                 %nothing to do
             end
@@ -250,18 +253,19 @@ for iiDim=1:length(dimensionsList)
     
     if ~strcmpi (parserOptionValue,'metadata') % harvest data
         
-        if  sum(strcmp(listVariables,dimensionsList{iiDim})) ~= 0 % means if there is no data for this dimension
+        if  sum(strcmp(listVariables,dimensionsList{iiDim})) ~= 0 
             data =  nctoolbox_datasetInfo.data(dimensionsList(iiDim));
             
             
-            if isnumeric(data)
+            if isnumeric(data) && ~(strcmpi('time',dimensionsList{iiDim}) ...
+                    || strcmpi('JULD',dimensionsList{iiDim}) ) % basically, if it's a normal dimension and not a time dimension, then we change the type from double to single
                 data = single(data);
             elseif ischar(data)
                 %nothing to do
             end
             dataset.dimensions.(dimensionsList{iiDim}).data = data;
             
-        else
+        else % means if there is no data for this dimension
             
             if dimensionsSize( strcmpi(dimensionsNames,dimensionsList{iiDim})) < power(2,8)
                 data = uint8( 1:dimensionsSize( strcmpi(dimensionsNames,dimensionsList{iiDim})))';
@@ -303,16 +307,7 @@ if ~strcmpi (parserOptionValue,'metadata')
                 
                 
                 dataQC =  (nctoolbox_datasetInfo.data(ancillaryVariables_qc{1}));
-                
-                if length(dataQC) < power(2,8)
-                    dataQC=uint8(dataQC);
-                elseif length(dataQC) < power(2,16) && length(dataQC) > power(2,8)
-                    dataQC=uint16(dataQC);
-                elseif length(dataQC) < power(2,32) && length(dataQC) > power(2,16)
-                    dataQC=uint32(dataQC);
-                end
-                
-                
+                    
                 attNameQC = nctoolbox_datasetInfo.attributes(ancillaryVariables_qc{1});
                 
                 if (sum(strcmpi('quality_control_set',attNameQC(:,1)) == 0))
@@ -333,8 +328,9 @@ if ~strcmpi (parserOptionValue,'metadata')
                     flag_values = flag_values{:};
                     flag_meanings = flag_meanings{:};
                     flag_quality_control_conventions = flag_quality_control_conventions{:};
+                    dataQC=uint8(dataQC);
                 elseif quality_control_set == 2 %ARGO quality control procedure
-                    
+                    dataQC=uint8(dataQC);
                 elseif quality_control_set == 3 %BOM quality control procedure (SST and Air-Sea fluxes)
                     flag_values = attNameQC(strcmpi('quality_control_flag_values',attNameQC),2);
                     flag_meanings = attNameQC(strcmpi('quality_control_flag_meanings',attNameQC),2);
@@ -351,6 +347,7 @@ if ~strcmpi (parserOptionValue,'metadata')
                     flag_values = flag_values{:};
                     flag_meanings = flag_meanings{:};
                     flag_quality_control_conventions = flag_quality_control_conventions{:};
+                    dataQC=uint8(dataQC);
                 end
                 
                 dataset.variables.(variablesToExport{iiVar}).flag_meanings = flag_meanings;
@@ -364,15 +361,7 @@ if ~strcmpi (parserOptionValue,'metadata')
                 ancillaryVariables_qc=strcat(variablesToExport{iiVar},'_quality_control');
                 if  sum(~cellfun('isempty',strfind(listVariables,ancillaryVariables_qc))) > 0 % if the variable name we just created is actually in the list of variables
                     dataQC =  (nctoolbox_datasetInfo.data(ancillaryVariables_qc));
-                    
-                    if length(dataQC) < power(2,8)
-                        dataQC=uint8(dataQC);
-                    elseif length(dataQC) < power(2,16) && length(dataQC) > power(2,8)
-                        dataQC=uint16(dataQC);
-                    elseif length(dataQC) < power(2,32) && length(dataQC) > power(2,16)
-                        dataQC=uint32(dataQC);
-                    end
-                
+
                     attNameQC = nctoolbox_datasetInfo.attributes(ancillaryVariables_qc);
                     quality_control_set = uint8(cell2mat(attNameQC(strcmpi('quality_control_set',attNameQC),2)));
                     
@@ -385,10 +374,13 @@ if ~strcmpi (parserOptionValue,'metadata')
                         flag_meanings = attNameQC(strcmpi('flag_meanings',attNameQC),2);
                         flag_quality_control_conventions=attNameQC(strcmpi('quality_control_conventions',attNameQC),2);
                         
-                         flag_values = flag_values{:};
+                        flag_values = flag_values{:};
                         flag_meanings = flag_meanings{:};
                         flag_quality_control_conventions = flag_quality_control_conventions{:};
+                        
+                         dataQC=uint8(dataQC);
                     elseif quality_control_set == 2 %ARGO quality control procedure
+                        dataQC=uint8(dataQC);
                         
                     elseif quality_control_set == 3 %BOM quality control procedure (SST and Air-Sea fluxes)
                         flag_values = attNameQC(strcmpi('quality_control_flag_values',attNameQC),2);
@@ -398,15 +390,17 @@ if ~strcmpi (parserOptionValue,'metadata')
                         flag_values = flag_values{:};
                         flag_meanings = flag_meanings{:};
                         flag_quality_control_conventions = flag_quality_control_conventions{:};
+                        
                     else %we assume it is IMOS
                         flag_values = attNameQC(strcmpi('flag_values',attNameQC),2);
                         flag_meanings = attNameQC(strcmpi('flag_meanings',attNameQC),2);
                         flag_quality_control_conventions = attNameQC(strcmpi('quality_control_conventions',attNameQC),2);
                         
-                         flag_values = flag_values{:};
+                        flag_values = flag_values{:};
                         flag_meanings = flag_meanings{:};
                         flag_quality_control_conventions = flag_quality_control_conventions{:};
                         
+                        dataQC=uint8(dataQC);
                     end
                     
                     dataset.variables.(variablesToExport{iiVar}).flag_meanings = flag_meanings;
