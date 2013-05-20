@@ -75,6 +75,9 @@ if optargin > 0
         elseif strcmpi(varargin{ii_optargin} , 'varList')
             variablesChoosenByUser = varargin{ii_optargin+1};
             
+%         elseif strcmpi(varargin{ii_optargin} , 'geoBoundaryBox')
+%             geoBoundaryBox = varargin{ii_optargin+1};
+            
         else  error('%s is not a valid option',varargin{ii_optargin});
         end
         
@@ -270,10 +273,12 @@ for iiDim=1:length(dimensionsList)
             if dimensionsSize( strcmpi(dimensionsNames,dimensionsList{iiDim})) < power(2,8)
                 data = uint8( 1:dimensionsSize( strcmpi(dimensionsNames,dimensionsList{iiDim})))';
             
-            elseif dimensionsSize( strcmpi(dimensionsNames,dimensionsList{iiDim})) > power(2,8) &&  dimensionsSize( strcmpi(dimensionsNames,dimensionsList{iiDim})) < power(2,16)
+            elseif ( dimensionsSize( strcmpi(dimensionsNames,dimensionsList{iiDim})) > power(2,8) ) &&  ...
+                    ( dimensionsSize( strcmpi(dimensionsNames,dimensionsList{iiDim})) < power(2,16) )
                 data = uint16( 1:dimensionsSize( strcmpi(dimensionsNames,dimensionsList{iiDim})))';
             
-            elseif dimensionsSize( strcmpi(dimensionsNames,dimensionsList{iiDim})) > power(2,16) &&  dimensionsSize( strcmpi(dimensionsNames,dimensionsList{iiDim})) < power(2,32)
+            elseif ( dimensionsSize( strcmpi(dimensionsNames,dimensionsList{iiDim})) > power(2,16) ) &&  ...
+                    ( dimensionsSize( strcmpi(dimensionsNames,dimensionsList{iiDim})) < power(2,32) )
                 data = uint32( 1:dimensionsSize( strcmpi(dimensionsNames,dimensionsList{iiDim})))';
             
             else
