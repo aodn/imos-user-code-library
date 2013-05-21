@@ -17,9 +17,7 @@ timeData = abos_DATA.dimensions.(char(tempDataStructure.dimensions)).data;
  
 abstract = abos_DATA.metadata.abstract;
  
-figure1 = figure;
-set(figure1, 'Position',  [1 500 900 500 ], 'Color',[1 1 1]);
- 
+figure1 = figure;set(figure1,'Color',[1 1 1]);%please resize the window manually
 plot (timeData,tempData)
 title([abos_DATA.metadata.title ' at ' num2str(tempDataStructure.sensor_depth) ' m depth' ])
 xlabel([strrep(abos_DATA.dimensions.(char(tempDataStructure.dimensions)).long_name,'_', ' ')])

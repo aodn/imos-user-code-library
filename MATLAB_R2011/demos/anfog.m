@@ -19,9 +19,7 @@ depthData = anfog_DATA.variables.DEPTH.data (anfog_DATA.variables.PSAL.flag == q
 % get the flag meaning values to add it later in the figure title
 flag_meanings = textscan(anfog_DATA.variables.PSAL.flag_meanings,'%s','delimiter',' '); 
  
-figure1 = figure;
-set(figure1, 'Position',  [1 500 900 500 ], 'Color',[1 1 1]);
- 
+figure1 = figure;set(figure1,'Color',[1 1 1]);%please resize the window manually
 [AX,H1,H2] = plotyy(timeData,psalData,timeData,depthData,'plot');% plot 2 functions in same fig
  
 set(get(AX(1),'Ylabel'),'String',[strrep( anfog_DATA.variables.PSAL.standard_name,'_', ' ') ' in '  anfog_DATA.variables.PSAL.units]) 
@@ -29,10 +27,8 @@ set(get(AX(2),'Ylabel'),'String',[strrep( anfog_DATA.variables.DEPTH.standard_na
  
 datetick(AX(1),'x',0,'keeplimits','keepticks') 
 set(AX(2),'XTick',[])
- 
+set(H1,'LineStyle','--')
+set(H2,'LineStyle',':')
  
 xlabel(anfog_DATA.dimensions.TIME.standard_name) 
 title({anfog_DATA.metadata.title,['plot of ' strrep(flag_meanings{1}{qcLevel+1},'_',' ') ' only'] })
- 
-set(H1,'LineStyle','--')
-set(H2,'LineStyle',':')

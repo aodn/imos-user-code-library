@@ -28,9 +28,7 @@ latArgo = argo_DATA.variables.LATITUDE.data;
 lonArgo = argo_DATA.variables.LONGITUDE.data;
  
 % temperature profile
-figure1 = figure;
-set(figure1, 'Position',  [1 500 900 500 ], 'Color',[1 1 1]);
- 
+figure1 = figure;set(figure1, 'Color',[1 1 1]);%please resize the window manually 
 plot (tempData,presData)
 title({argo_DATA.metadata.description ,...
      datestr(timeProfile) ,...
@@ -40,10 +38,8 @@ xlabel(strrep([argo_DATA.variables.TEMP_ADJUSTED.long_name ' in ' argo_DATA.vari
 ylabel(strrep([argo_DATA.variables.PRES_ADJUSTED.long_name ' in ' argo_DATA.variables.PRES_ADJUSTED.units],'_', ' '))
  
 % salinity profile
-figure2 = figure;
-set(figure2, 'Position',  [1 500 900 500 ], 'Color',[1 1 1]);
- 
-plot (psalData,presData)
+figure2 = figure; set(figure2, 'Color',[1 1 1]); %please resize the window manually
+plot (psalData,presData) % for this example there is no data to display. But another profile should.
 title({argo_DATA.metadata.description ,...
      datestr(timeProfile) ,...
      ['location:lat=' num2str(latProfile) '; lon=' num2str(lonProfile)],...
@@ -52,9 +48,7 @@ xlabel(strrep([argo_DATA.variables.PSAL_ADJUSTED.long_name ' in ' argo_DATA.vari
 ylabel(strrep([argo_DATA.variables.PRES_ADJUSTED.long_name ' in ' argo_DATA.variables.PRES_ADJUSTED.units],'_', ' '))
  
 % argo float trajectory
-figure3 = figure;
-set(figure3, 'Position',  [1 500 900 500 ], 'Color',[1 1 1]);
- 
+figure3 = figure;set(figure3, 'Color',[1 1 1]); %please resize the window manually
 plot(lonArgo,latArgo,'+')
 xlabel(argo_DATA.variables.LONGITUDE.long_name)
 ylabel(argo_DATA.variables.LATITUDE.long_name)

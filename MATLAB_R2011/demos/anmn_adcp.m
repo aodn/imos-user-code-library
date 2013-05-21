@@ -47,13 +47,11 @@ part6 = linspace( whitecolor(3), redcolor(3),maplength/2);
 cmap_r_b = [horzcat(part1, part2)',horzcat(part3, part4)',horzcat(part5, part6)'];
  
 %creation of the figure
-figure1 = figure;
+figure1 = figure;set(figure1, 'Color',[1 1 1]);%please resize the window manually
 set(figure1, 'Renderer', 'painters') %to get rid of renderer bug with dateticks 
-set(figure1, 'Position',  [1 500 900 500 ], 'Color',[1 1 1]);
 pcolor(timeData_mesh , double(depthData_mesh) , double(uCurrentData))
- 
- 
 shading flat
+
 caxis([-max(max(abs(uCurrentData))) max(max(abs(uCurrentData)))]) % colorbar centered . we take the abs value
 colormap(cmap_r_b)
 cmap = colorbar;

@@ -15,9 +15,7 @@ qcLevel = 1; % only the Good data are being used
 tempData = faimms_DATA.variables.TEMP.data (faimms_DATA.variables.TEMP.flag == qcLevel);
 timeData = faimms_DATA.dimensions.TIME.data(faimms_DATA.variables.TEMP.flag == qcLevel);
  
-figure1 = figure;
-set(figure1, 'Position',  [1 500 900 500 ], 'Color',[1 1 1]);
- 
+figure1 = figure; set(figure1, 'Color',[1 1 1]);%please resize the window manually
 plot (timeData,tempData)
 title({faimms_DATA.metadata.title ,...
     [num2str(faimms_DATA.variables.TEMP.sensor_depth) ' m depth'] ,...

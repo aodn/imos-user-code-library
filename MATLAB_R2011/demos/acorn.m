@@ -25,13 +25,12 @@ vData = (acorn_DATA.variables.VCUR.data);
 % desired (value between 1 and length(timeData)
 timeIndex = 5;
  
-figure1 = figure;
-set(figure1, 'Position',  [1 500 900 500 ], 'Color',[1 1 1]);
- 
+figure1 = figure; set(figure1,'Color',[1 1 1]);%please resize the window manually
 quiver(lonData,latData,squeeze(uData(timeIndex,:,:)),squeeze(vData(timeIndex,:,:)),1.5,'LineWidth',1,'Color','k')
 hold all
  
-% to place a quiver plot on top of a surface plot
+% to place a quiver plot on top of a surface plot, we need to create this z
+% function
 z = lonData .* exp(-lonData.^2 - latData.^2);
 h = surface(lonData ,latData , squeeze(speedData(timeIndex,:,:)));
 set(h,'ZData',-1+0*z) % Move the surface plot to Z = -1 in order to plot quivers over surface

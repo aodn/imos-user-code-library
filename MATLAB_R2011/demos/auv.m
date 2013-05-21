@@ -17,9 +17,7 @@ depthData = auv_DATA.variables.DEPTH.data;
 averageLat = mean(auv_DATA.variables.LATITUDE.data);
 averageLon = mean(auv_DATA.variables.LONGITUDE.data);
  
- 
-figure1 = figure;
-set(figure1, 'Position',  [1 500 1400 500 ], 'Color',[1 1 1]);
+figure1 = figure;set(figure1, 'Color',[1 1 1]);%please resize the window manually
  
 xlabel([strrep(auv_DATA.dimensions.(char(auv_DATA.variables.TEMP.dimensions)).long_name,'_', ' ')])
 ylabel([strrep( auv_DATA.variables.TEMP.standard_name,'_', ' ') ' in '  auv_DATA.variables.TEMP.units])

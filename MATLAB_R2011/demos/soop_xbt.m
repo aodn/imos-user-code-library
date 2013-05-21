@@ -41,7 +41,6 @@ indexGoodData = xbt_DATA.variables.TEMP.flag(:,indexCruiseToPlot) ~= qcFlag;
 tempCruise =  double(TEMP.data(:,indexCruiseToPlot));
 depthCruise = double(DEPTH.data(:,indexCruiseToPlot));
  
- 
 % we modify the values which we don't want to plot to replace them with NaN
 tempCruise(~indexGoodData) = NaN;
 depthCruise(~indexGoodData) = NaN;
@@ -52,8 +51,7 @@ sizer = ones(nline,1) ;
 profileIndex = 1:ncol;
 prof_2D =  sizer * profileIndex ;
  
-figure1 = figure;
-set(figure1, 'Position',  [1 1000 1100 900 ], 'Color',[1 1 1]);
+figure1 = figure;set(figure1, 'Color',[1 1 1]);%please resize the window manually
  
 %plot the xbt TEMP timeseries
 subplot(2,3,1:3),
@@ -90,8 +88,7 @@ set(figure1, 'Renderer', 'painters') %to get rid of renderer bug with dateticks
  
 % plot of a single profile
 profileToPlot = 1 ; % this is arbitrary. We can plot all profiles from 1 to ncol, modify profileToPlot if desired 
-figure2 = figure;
-set(figure2, 'Position',  [1 500 900 500 ], 'Color',[1 1 1]);
+figure2 = figure;set(figure2, 'Color',[1 1 1]);%please resize the window manually
 plot (tempCruise(:,profileToPlot),-depthCruise(:,profileToPlot))
 title({xbt_DATA.metadata.title ,...
     ['Cruise ' char(cruiseToPlot)] ,...

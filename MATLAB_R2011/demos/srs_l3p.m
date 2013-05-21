@@ -9,7 +9,7 @@
 % The script is distributed under the terms of the GNU General Public License
 
 srs_URL = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/eMII/demos/SRS/SRS-SST/L3P/2013/20130315-ABOM-L3P_GHRSST-SSTsubskin-AVHRR_MOSAIC_01km-AO_DAAC-v01-fv01_0.nc' ;
-srsL3P_DATA = ncParse(srs_URL,'geoBoundaryBox', [140 150 -50 -30]) ; % tassie
+srsL3P_DATA = ncParse(srs_URL,'geoBoundaryBox', [142 150 -20 -10]) ; % GBR
  
 step = 1; % we take one point out of 'step'. Only to make it faster to plot on Matlab
 % squeeze the data to get rid of the time dimension in the variable shape 
@@ -19,7 +19,7 @@ lon = squeeze(srsL3P_DATA.dimensions.lon.data(1:step:end));
  
 [lon_mesh,lat_mesh] = meshgrid(lon,lat);% we create a matrix of similar size to be used afterwards with pcolor
  
-figure1 = figure;
+figure1 = figure;set(figure1,'Color',[1 1 1]);%please resize the window manually
 surface(double(lon_mesh) , double(lat_mesh) , double(sst))
 shading flat 
 caxis([min(min(sst)) max(max(sst))])

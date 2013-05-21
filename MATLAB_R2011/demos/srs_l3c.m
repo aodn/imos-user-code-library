@@ -9,8 +9,7 @@
 % The script is distributed under the terms of the GNU General Public License
 
 srs_URL = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/eMII/demos/SRS/SRS-SST/L3C-01day/L3C_GHRSST-SSTskin-AVHRR19_D-1d_night/2013/20130401152000-ABOM-L3C_GHRSST-SSTskin-AVHRR19_D-1d_night-v02.0-fv01.0.nc.gz' ;
-srsL3C_DATA = ncParse(srs_URL,'geoBoundaryBox', [130 165 -50 -10]) ; % tassie
-
+srsL3C_DATA = ncParse(srs_URL,'geoBoundaryBox', [110 120 -40 -10]) ; % WA
  
 step = 1; % we take one point out of 'step'. Only to make it faster to plot on Matlab
 % squeeze the data to get rid of the time dimension in the variable shape 
@@ -21,12 +20,16 @@ lon = squeeze(srsL3C_DATA.dimensions.lon.data(1:step:end));
 if sum(lon<0) > 0
     lon(lon<0) =  lon(lon<0)+360;
 end
+land = squeeze(srsL3C_DATA.variables.l2p_flags.data(1,1:step:end,1:step:end)); % land data
+land (land ~= 2 ) = NaN; % see srsL3C_DATA.variables.l2p_flags.flag_meanings for more information: 2 == land
+
  
 [lon_mesh,lat_mesh] = meshgrid(lon,lat);% we create a matrix of similar size to be used afterwards with pcolor
  
-figure1 = figure;
-set(figure1, 'Position',  [1 500 900 500 ], 'Color',[1 1 1]);
- 
+figure1 = figure;set(figure1,'Color',[1 1 1]); %please resize the window manually
+surface(double(lon_mesh) , double(lat_mesh) , double(land)) % plot land
+hold all
+
 surface(double(lon_mesh) , double(lat_mesh) , double(sst))
 shading flat 
 caxis([min(min(sst)) max(max(sst))])

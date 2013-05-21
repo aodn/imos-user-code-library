@@ -30,9 +30,7 @@ indexObservation =  indexObservationStart:indexObservationEnd ;
 cphl_aData = srs_DATA.variables.CPHL_a.data(indexObservation);  %for ProfileToPlot
 depthData = srs_DATA.variables.DEPTH.data(indexObservation);
  
-figure1 = figure;
-set(figure1, 'Position',  [1 500 900 500 ], 'Color',[1 1 1]);
- 
+figure1 = figure;set(figure1,'Color',[1 1 1]);%please resize the window manually 
 plot (cphl_aData,depthData)
 title({srs_DATA.metadata.source ,...
     datestr(timeProfile),...

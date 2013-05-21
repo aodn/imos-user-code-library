@@ -34,9 +34,7 @@ sizer = ones(1, ncol);
 CYCLE_NUMBER2D = double(argo_DATA.variables.CYCLE_NUMBER.data(argoFloatProfilesIndexes)) * sizer;
 TIME_CYCLE_NUMBER2D = timeProfile * sizer;
  
-figure1 = figure;
-set(figure1, 'Position',  [1 1000 1100 900 ], 'Color',[1 1 1]);
- 
+figure1 = figure;set(figure1, 'Color',[1 1 1]); %please resize the window manually
 %plot the argofloat TEMP timeseries
 subplot(2,2,1:2),
 pcolor(TIME_CYCLE_NUMBER2D, -presData, tempData);

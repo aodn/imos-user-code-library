@@ -32,8 +32,7 @@ depthData = double(srs_DATA.variables.DEPTH.data(indexObservation));
  % we create a matrix of similar size to be used afterwards with pcolor
 [wavelengthData_mesh,depthData_mesh] = meshgrid(wavelengthData,depthData);
  
-figure1 = figure;
-set(figure1, 'Position',  [1 500 900 500 ], 'Color',[1 1 1]);
+figure1 = figure;set(figure1,'Color',[1 1 1]);%please resize the window manually
 pcolor(wavelengthData_mesh , depthData_mesh , agData)
  
 shading flat 
@@ -44,10 +43,9 @@ title(strrep([srs_DATA.metadata.source ],'_',' '))
 xlabel( strrep([srs_DATA.dimensions.wavelength.long_name ' in: ', srs_DATA.dimensions.wavelength.units],'_', ' '))
 ylabel(strrep([srs_DATA.variables.DEPTH.long_name ' in ' srs_DATA.variables.DEPTH.units '; positive ' srs_DATA.variables.DEPTH.positive ],'_',' '))
  
-%%%%%%%%%%%%%%5
+%%%%%%%%%%%%%%
 nDepth = length(depthData);
-figure2 = figure;
-set(figure2, 'Position',  [1 500 900 500 ], 'Color',[1 1 1]);
+figure2 = figure;set(figure2,'Color',[1 1 1]);%please resize the window manually
 plot(wavelengthData,agData,'x')
 unitsMainVar=char(srs_DATA.variables.ag.units);
 ylabel( strrep([srs_DATA.variables.ag.long_name ' in: ', srs_DATA.variables.ag.units],'_', ' '))

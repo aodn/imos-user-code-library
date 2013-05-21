@@ -47,9 +47,8 @@ sizer = ones(1, ncol);
 TIME_CYCLE_NUMBER2D = timeData * sizer;
  
 %plot all the profiles as a timeseries
-figure1 = figure; 
+figure1 = figure; set(figure1,'Color',[1 1 1]);%please resize the window manually
 set(figure1, 'Renderer', 'painters') %to get rid of renderer bug with dateticks
-set(figure1, 'Position',  [1 1000 1100 900 ], 'Color',[1 1 1]);
 subplot(2,2,1:2),
 pcolor(TIME_CYCLE_NUMBER2D, double(-presData), double(tempData));
 datetick('x',20)
@@ -80,8 +79,7 @@ datetick('x',20)
 % plot of a single profile
 profileToPlot = 1 ; % this is arbitrary. We can plot all profiles from 1 to nProfiles, modify profileToPlot as desired
  
-figure2 = figure;
-set(figure2, 'Position',  [1 500 900 500 ], 'Color',[1 1 1]);
+figure2 = figure;set(figure2,'Color',[1 1 1]);
 plot (tempData(profileToPlot,:),presData(profileToPlot,:))
 title({aatams_DATA.metadata.title,...
     [ 'location',num2str(latProfile(profileToPlot),'%2.3f'),'/',num2str(lonProfile(profileToPlot),'%3.2f') ],...
