@@ -15,6 +15,9 @@ function dataset = ncParse (inputFileName,varargin)
 %     [parserOption]   'all'       => to retrieve the entire file
 %                      'metadata'  => to retrieve metadata only
 %
+%    'geoBoundaryBox', [minLon maxLon minLat maxLat] only work when a variable lat* or
+%    lon* are dimensions and not variables. regexpi on lat so the latitude
+%    can be either lat Lat LAT LATITUDE ...
 %
 %    'varList' , [varList]   => Parse only a specified set of variables
 %
@@ -75,6 +78,14 @@ if optargin > 0
         elseif strcmpi(varargin{ii_optargin} , 'varList')
             variablesChoosenByUser = varargin{ii_optargin+1};
             
+        elseif strcmpi(varargin{ii_optargin} , 'geoBoundaryBox')
+            geoBoundaryBox = varargin{ii_optargin+1};
+            
+            if (geoBoundaryBox(2) < geoBoundaryBox(1)) ||  (geoBoundaryBox(4) < geoBoundaryBox(3))
+                warning('geoBoundaryBox was badly written [minlon maxlon minlat maxlat]. Subsetting is cancelled ');
+                clear geoBoundaryBox
+            end
+            
         else  error('%s is not a valid option',varargin{ii_optargin});
         end
         
@@ -128,6 +139,8 @@ for iiVar=1:length(listVariables_NOQC)
     otherDimension = cat(1, otherDimension , nctoolbox_datasetInfo.dimensions(listVariables_NOQC(iiVar)));
 end
 
+otherDimension = strrep(otherDimension,'"',''); % it appeared while testing on a windows machine, that calling nctoolbox_datasetInfo.dimensions would put double quotes around dimensions names. Creating therefor a conflict later on when creating the structure
+
 if exist('dimensionsList','var')
     dimensionsList = unique(cat(1,otherDimension,dimensionsList'));
 else
@@ -138,66 +151,12 @@ if ~exist('variablesChoosenByUser','var')
     variablesChoosenByUser=variablesList;
 else
     if sum(strcmpi(variablesChoosenByUser, (variablesList))) == 0
-        warning('variable does not exist in dataset','Variable %s does not exist in the NetCDF file. Only medata will be parsed',variablesChoosenByUser);
+        warning('variable does not exist in dataset','Variable %s does not exist in the NetCDF file. Only metadata will be parsed',variablesChoosenByUser);
     end
     %check variable exist
 end
 
 variablesToExport = variablesChoosenByUser;
-%% get variables , only QC ones
-% for iiVar=1:length(variablesList)
-for iiVar=1:length(variablesToExport)
-
-    
-    dimensionAssociated = nctoolbox_datasetInfo.dimensions(variablesToExport(iiVar))';
-    
-    dataset.variables.(variablesToExport{iiVar}).dimensions = [dimensionAssociated];
-    
-    varAttributes = nctoolbox_datasetInfo.attributes(variablesToExport(iiVar));
-    
-    for iiVarAttributes=1:size(varAttributes,1)
-        attName=(varAttributes{iiVarAttributes,1});
-        if  strfind(attName(1),'_') %remove the underscore at the beginning of an attribute
-            attName=[attName(2:end) , '_'];
-        end
-        
-        if isempty(regexp(attName,'ancillary_variables', 'once')) % we remove this attribute
-            dataset.variables.(variablesToExport{iiVar}).(attName) = varAttributes{iiVarAttributes,2};
-        end
-    end
-    
-    if ~strcmpi (parserOptionValue,'metadata')
-        if sum( strcmpi(variablesChoosenByUser, (variablesToExport{iiVar})) ~= 0)
-            
-            data =  nctoolbox_datasetInfo.data(variablesToExport(iiVar));
-            
-            dataset.variables.(variablesToExport{iiVar}).data = data;
-            clear data
-        end
-    end
-    %     dimensionAssociated = nctoolbox_datasetInfo.dimensions(listVariables_NOQC(iiVar))';
-    %     dataset.variables.(variablesList{iiVar}).dimensions = [dimensionAssociated];
-    %     varAttributes = nctoolbox_datasetInfo.attributes(variablesList(iiVar));
-    %     
-    %     for iiVarAttributes=1:size(varAttributes,1)
-    %         attName=(varAttributes{iiVarAttributes,1});
-    %         if  strfind(attName(1),'_') %remove the underscore at the beginning of an attribute
-    %             attName=attName(2:end);
-    %         end
-    %         dataset.variables.(variablesList{iiVar}).(attName) = varAttributes{iiVarAttributes,2};
-    %     end
-    %
-    %     if ~strcmpi (parserOptionValue,'metadata')
-    %         if sum( strcmpi(variablesChoosenByUser, (variablesList{iiVar})) ~= 0)
-    %
-    %             data =  nctoolbox_datasetInfo.data(variablesList(iiVar));
-    %
-    %             dataset.variables.(variablesList{iiVar}).data = data;
-    %             clear data
-    %         end
-    %     end
-end
-
 
 
 % when a dimension does not have any data, we need at least to know its size.
@@ -242,13 +201,62 @@ for iiDim=1:length(dimensionsList)
     
     if ~strcmpi (parserOptionValue,'metadata') % harvest data
         
-        if  sum(strcmp(listVariables,dimensionsList{iiDim})) ~= 0 % means if there is no data for this dimension
-            data =  nctoolbox_datasetInfo.data(dimensionsList(iiDim));
+        if  sum(strcmp(listVariables,dimensionsList{iiDim})) ~= 0
+            
+            if exist('geoBoundaryBox','var') & regexpi(dimensionsList{iiDim},'lat')
+                latFullGrid = nctoolbox_datasetInfo.data(dimensionsList( ~cellfun('isempty',regexpi(dimensionsList,'lat')) ));
+                indexLat = latFullGrid >=  geoBoundaryBox(3) &  latFullGrid <=  geoBoundaryBox(4);
+                latToKeep = latFullGrid(indexLat);
+                if isempty(latToKeep)
+                    warning('No data found in geoBoundaryBox. subset is cancelled : all data is harvested');
+                end
+                data = latToKeep;
+                
+            elseif  exist('geoBoundaryBox','var') & regexpi(dimensionsList{iiDim},'lon')
+                lonFullGrid = nctoolbox_datasetInfo.data(dimensionsList( ~cellfun('isempty',regexpi(dimensionsList,'lon')) ));
+                lonFullGrid_bckp = lonFullGrid;
+                % we need to transform lon values in case they go from -180
+                % to 180. we prefer 0 to 360 for geoBoundaryBox
+                lonFullGrid (lonFullGrid<0) = lonFullGrid (lonFullGrid<0) +360;
+                indexLon = lonFullGrid >=  geoBoundaryBox(1) &  lonFullGrid <=  geoBoundaryBox(2);
+                % but we don't want to change the values , so >
+                lonFullGrid = lonFullGrid_bckp;
+                lonToKeep = lonFullGrid(indexLon);
+                
+                if isempty(lonToKeep)
+                    warning('No data found in geoBoundaryBox. subset is cancelled : all data is harvested');
+                end
+                data = lonToKeep;
+                
+            else
+                data =  nctoolbox_datasetInfo.data(dimensionsList(iiDim));
+            end
+            
+            if isnumeric(data) && ~(strcmpi('time',dimensionsList{iiDim}) ...
+                    || strcmpi('JULD',dimensionsList{iiDim}) ) % basically, if it's a normal dimension and not a time dimension, then we change the type from double to single
+                data = single(data);
+            elseif ischar(data)
+                %nothing to do
+            end
             dataset.dimensions.(dimensionsList{iiDim}).data = data;
             
-        else
+        else % means if there is no data for this dimension
             
-            data = ( 1:dimensionsSize( strcmpi(dimensionsNames,dimensionsList{iiDim})))';
+            if dimensionsSize( strcmpi(dimensionsNames,dimensionsList{iiDim})) < power(2,8)
+                data = uint8( 1:dimensionsSize( strcmpi(dimensionsNames,dimensionsList{iiDim})))';
+                
+            elseif ( dimensionsSize( strcmpi(dimensionsNames,dimensionsList{iiDim})) > power(2,8) ) &  ...
+                    ( dimensionsSize( strcmpi(dimensionsNames,dimensionsList{iiDim})) < power(2,16) )
+                data = uint16( 1:dimensionsSize( strcmpi(dimensionsNames,dimensionsList{iiDim})))';
+                
+            elseif ( dimensionsSize( strcmpi(dimensionsNames,dimensionsList{iiDim})) > power(2,16) ) &  ...
+                    ( dimensionsSize( strcmpi(dimensionsNames,dimensionsList{iiDim})) < power(2,32) )
+                data = uint32( 1:dimensionsSize( strcmpi(dimensionsNames,dimensionsList{iiDim})))';
+                
+            else
+                data = ( 1:dimensionsSize( strcmpi(dimensionsNames,dimensionsList{iiDim})))';
+            end
+            
             dataset.dimensions.(dimensionsList{iiDim}).data = data;
         end
         
@@ -257,10 +265,115 @@ for iiDim=1:length(dimensionsList)
     clear data
 end
 
+if exist('geoBoundaryBox','var')
+    if exist('lonToKeep','var') || exist('latToKeep','var')
+        if isempty(lonToKeep) ||   isempty(latToKeep)
+            clear  geoBoundaryBox
+            % we do this in case we had a warning above saying lonToKeep or
+            % latToKeep were empty
+            
+        end
+    else
+        clear  geoBoundaryBox
+    end
+end
+%% get variables , only QC ones
+for iiVar=1:length(variablesToExport)
+    
+    
+    dimensionAssociated = nctoolbox_datasetInfo.dimensions(variablesToExport(iiVar))';
+    
+    dataset.variables.(variablesToExport{iiVar}).dimensions = [dimensionAssociated];
+    
+    varAttributes = nctoolbox_datasetInfo.attributes(variablesToExport(iiVar));
+    
+    for iiVarAttributes=1:size(varAttributes,1)
+        attName=(varAttributes{iiVarAttributes,1});
+        if  strfind(attName(1),'_') %remove the underscore at the beginning of an attribute
+            attName=[attName(2:end) , '_'];
+        end
+        
+        if isempty(regexp(attName,'ancillary_variables', 'once')) % we remove this attribute
+            dataset.variables.(variablesToExport{iiVar}).(attName) = varAttributes{iiVarAttributes,2};
+        end
+    end
+    
+    if ~strcmpi (parserOptionValue,'metadata')
+        if sum( strcmpi(variablesChoosenByUser, (variablesToExport{iiVar})) ~= 0)
+            
+            if exist('geoBoundaryBox','var') &&  (...
+                    ~isempty(strcmpi('lon',dataset.variables.(variablesToExport{iiVar}).dimensions)) || ...
+                    ~isempty(strcmpi('lat',dataset.variables.(variablesToExport{iiVar}).dimensions)) )
+                lonPositionInDimensionOrder = find (strcmpi('lon',dataset.variables.(variablesToExport{iiVar}).dimensions), 1);
+                latPositionInDimensionOrder = find (strcmpi('lat',dataset.variables.(variablesToExport{iiVar}).dimensions), 1);
+                
+                firstIndex =  ones(size(dataset.variables.(variablesToExport{iiVar}).dimensions)); %initialise
+                firstIndex(lonPositionInDimensionOrder) = find(indexLon, 1,'first');
+                firstIndex(latPositionInDimensionOrder) = find(indexLat, 1,'first');
+                
+                lastIndex =  ones(size(dataset.variables.(variablesToExport{iiVar}).dimensions)); %initialise
+                lastIndex(lonPositionInDimensionOrder) = find(indexLon, 1,'last');
+                lastIndex(latPositionInDimensionOrder) = find(indexLat, 1,'last');
+                
+                % we need to find the size of the other dimensions to populate lastIndex
+                % properly for the non Lat and Lon dimensions.
+                
+                %first we look for all the non lat and lon dimensions the variable depends
+                %of
+                otherDims = setdiff((1:length(dataset.variables.(variablesToExport{iiVar}).dimensions)),[lonPositionInDimensionOrder,latPositionInDimensionOrder]);
+                
+                % and we look for the size of each dimension to populate lastIndex
+                for iiotherDims = 1:length(otherDims)
+                    lastIndex(iiotherDims) = length(dataset.dimensions.(dataset.variables.(variablesToExport{iiVar}).dimensions{iiotherDims}).data);
+                end
+                
+                % finally we harvest only the indexes we need
+                data =  nctoolbox_datasetInfo.data(variablesToExport(iiVar),firstIndex,lastIndex);
+                
+            else
+                data =  (nctoolbox_datasetInfo.data(variablesToExport(iiVar)));
+            end
+            if isnumeric(data) && ~(strcmpi('time',variablesToExport{iiVar}) ...
+                    || strcmpi('JULD',variablesToExport{iiVar}) ) % basically, if it's a normal dimension and not a time dimension, then we change the type from double to single
+                data = single(data);
+            elseif    strcmpi('flags',variablesToExport{iiVar}) || strcmpi('quality_level',variablesToExport{iiVar}) % for SRS GHRSST variables
+                data = uint(data);
+            elseif ischar(data)
+                %nothing to do
+            end
+            
+            dataset.variables.(variablesToExport{iiVar}).data = data;
+            clear data
+        end
+    end
+    %     dimensionAssociated = nctoolbox_datasetInfo.dimensions(listVariables_NOQC(iiVar))';
+    %     dataset.variables.(variablesList{iiVar}).dimensions = [dimensionAssociated];
+    %     varAttributes = nctoolbox_datasetInfo.attributes(variablesList(iiVar));
+    %
+    %     for iiVarAttributes=1:size(varAttributes,1)
+    %         attName=(varAttributes{iiVarAttributes,1});
+    %         if  strfind(attName(1),'_') %remove the underscore at the beginning of an attribute
+    %             attName=attName(2:end);
+    %         end
+    %         dataset.variables.(variablesList{iiVar}).(attName) = varAttributes{iiVarAttributes,2};
+    %     end
+    %
+    %     if ~strcmpi (parserOptionValue,'metadata')
+    %         if sum( strcmpi(variablesChoosenByUser, (variablesList{iiVar})) ~= 0)
+    %
+    %             data =  nctoolbox_datasetInfo.data(variablesList(iiVar));
+    %
+    %             dataset.variables.(variablesList{iiVar}).data = data;
+    %             clear data
+    %         end
+    %     end
+end
+
+
 
 %% add QC variables and flags
 if ~strcmpi (parserOptionValue,'metadata')
-
+    
     for iiVar=1:length(variablesToExport)
         
         %first we look for the variable attribute ancillary variables to see if
@@ -275,11 +388,12 @@ if ~strcmpi (parserOptionValue,'metadata')
             if ~isempty(ancillaryVariables_qc)
                 
                 
-                dataQC =  nctoolbox_datasetInfo.data(ancillaryVariables_qc{1});
+                dataQC =  (nctoolbox_datasetInfo.data(ancillaryVariables_qc{1}));
+                
                 attNameQC = nctoolbox_datasetInfo.attributes(ancillaryVariables_qc{1});
                 
                 if (sum(strcmpi('quality_control_set',attNameQC(:,1)) == 0))
-                    quality_control_set = cell2mat(attNameQC(strcmpi('quality_control_set',attNameQC),2));
+                    quality_control_set = uint8(cell2mat(attNameQC(strcmpi('quality_control_set',attNameQC),2)));
                 else
                     quality_control_set=1; %we assume it is IMOS
                 end
@@ -296,8 +410,9 @@ if ~strcmpi (parserOptionValue,'metadata')
                     flag_values = flag_values{:};
                     flag_meanings = flag_meanings{:};
                     flag_quality_control_conventions = flag_quality_control_conventions{:};
+                    dataQC=uint8(dataQC);
                 elseif quality_control_set == 2 %ARGO quality control procedure
-                    
+                    dataQC=uint8(dataQC);
                 elseif quality_control_set == 3 %BOM quality control procedure (SST and Air-Sea fluxes)
                     flag_values = attNameQC(strcmpi('quality_control_flag_values',attNameQC),2);
                     flag_meanings = attNameQC(strcmpi('quality_control_flag_meanings',attNameQC),2);
@@ -314,6 +429,7 @@ if ~strcmpi (parserOptionValue,'metadata')
                     flag_values = flag_values{:};
                     flag_meanings = flag_meanings{:};
                     flag_quality_control_conventions = flag_quality_control_conventions{:};
+                    dataQC=uint8(dataQC);
                 end
                 
                 dataset.variables.(variablesToExport{iiVar}).flag_meanings = flag_meanings;
@@ -326,9 +442,10 @@ if ~strcmpi (parserOptionValue,'metadata')
             try
                 ancillaryVariables_qc=strcat(variablesToExport{iiVar},'_quality_control');
                 if  sum(~cellfun('isempty',strfind(listVariables,ancillaryVariables_qc))) > 0 % if the variable name we just created is actually in the list of variables
-                    dataQC =  nctoolbox_datasetInfo.data(ancillaryVariables_qc);
+                    dataQC =  (nctoolbox_datasetInfo.data(ancillaryVariables_qc));
+                    
                     attNameQC = nctoolbox_datasetInfo.attributes(ancillaryVariables_qc);
-                    quality_control_set = cell2mat(attNameQC(strcmpi('quality_control_set',attNameQC),2));
+                    quality_control_set = uint8(cell2mat(attNameQC(strcmpi('quality_control_set',attNameQC),2)));
                     
                     % quality_control_set=1  =>1, IMOS standard set using the IODE flags,                 0 1 2 3 4 5 6 7 8 9,       byte, 99
                     % quality_control_set=2  =>2, ARGO quality control procedure,                         0 1 2 3 4 5 6 7 8 9,       byte, 99
@@ -339,10 +456,13 @@ if ~strcmpi (parserOptionValue,'metadata')
                         flag_meanings = attNameQC(strcmpi('flag_meanings',attNameQC),2);
                         flag_quality_control_conventions=attNameQC(strcmpi('quality_control_conventions',attNameQC),2);
                         
-                         flag_values = flag_values{:};
+                        flag_values = flag_values{:};
                         flag_meanings = flag_meanings{:};
                         flag_quality_control_conventions = flag_quality_control_conventions{:};
+                        
+                        dataQC=uint8(dataQC);
                     elseif quality_control_set == 2 %ARGO quality control procedure
+                        dataQC=uint8(dataQC);
                         
                     elseif quality_control_set == 3 %BOM quality control procedure (SST and Air-Sea fluxes)
                         flag_values = attNameQC(strcmpi('quality_control_flag_values',attNameQC),2);
@@ -352,15 +472,17 @@ if ~strcmpi (parserOptionValue,'metadata')
                         flag_values = flag_values{:};
                         flag_meanings = flag_meanings{:};
                         flag_quality_control_conventions = flag_quality_control_conventions{:};
+                        
                     else %we assume it is IMOS
                         flag_values = attNameQC(strcmpi('flag_values',attNameQC),2);
                         flag_meanings = attNameQC(strcmpi('flag_meanings',attNameQC),2);
                         flag_quality_control_conventions = attNameQC(strcmpi('quality_control_conventions',attNameQC),2);
                         
-                         flag_values = flag_values{:};
+                        flag_values = flag_values{:};
                         flag_meanings = flag_meanings{:};
                         flag_quality_control_conventions = flag_quality_control_conventions{:};
                         
+                        dataQC=uint8(dataQC);
                     end
                     
                     dataset.variables.(variablesToExport{iiVar}).flag_meanings = flag_meanings;
@@ -375,7 +497,7 @@ if ~strcmpi (parserOptionValue,'metadata')
         
         
     end
-
+    
 end
 
 %warning, don't change the following order. It is important to clean first,
@@ -407,7 +529,7 @@ if ~strcmpi (parserOptionValue,'metadata')
             clear data
         end
     end
-
+    
 end
 
 %% add filename origine information
