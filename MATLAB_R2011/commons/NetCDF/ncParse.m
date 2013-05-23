@@ -15,9 +15,6 @@ function dataset = ncParse (inputFileName,varargin)
 %     [parserOption]   'all'       => to retrieve the entire file
 %                      'metadata'  => to retrieve metadata only
 %
-%    'geoBoundaryBox', [minLon maxLon minLat maxLat] only work when a variable lat* or
-%    lon* are dimensions and not variables. regexpi on lat so the latitude
-%    can be either lat Lat LAT LATITUDE ...
 %
 %    'varList' , [varList]   => Parse only a specified set of variables
 %
@@ -78,13 +75,13 @@ if optargin > 0
         elseif strcmpi(varargin{ii_optargin} , 'varList')
             variablesChoosenByUser = varargin{ii_optargin+1};
             
-        elseif strcmpi(varargin{ii_optargin} , 'geoBoundaryBox')
-            geoBoundaryBox = varargin{ii_optargin+1};
-            
-            if (geoBoundaryBox(2) < geoBoundaryBox(1)) ||  (geoBoundaryBox(4) < geoBoundaryBox(3))
-                warning('geoBoundaryBox was badly written [minlon maxlon minlat maxlat]. Subsetting is cancelled ');
-                clear geoBoundaryBox
-            end
+%        elseif strcmpi(varargin{ii_optargin} , 'geoBoundaryBox')
+%            geoBoundaryBox = varargin{ii_optargin+1};
+%            
+%            if (geoBoundaryBox(2) < geoBoundaryBox(1)) ||  (geoBoundaryBox(4) < geoBoundaryBox(3))
+%                warning('geoBoundaryBox was badly written [minlon maxlon minlat maxlat]. Subsetting is cancelled ');
+%                clear geoBoundaryBox
+%            end
             
         else  error('%s is not a valid option',varargin{ii_optargin});
         end
@@ -164,14 +161,8 @@ variablesToExport = variablesChoosenByUser;
 % we can find this information looking at the size of the variable
 % depending of this variable
 %initialise the two next variables as cells does not work
-% dimensionsNames = cell(1,length(variablesList));
-% dimensionsSize = cell(1,length(variablesList));
 dimensionsNames = [];
 dimensionsSize = [];
-% for iiVar=1:length(variablesList)
-%     dimensionsNames = [dimensionsNames nctoolbox_datasetInfo.dimensions(listVariables_NOQC(iiVar))'];
-%     dimensionsSize = [dimensionsSize nctoolbox_datasetInfo.size(listVariables_NOQC(iiVar))];
-% end
 for iiVar=1:length(variablesToExport)
     dimensionsNames = [dimensionsNames nctoolbox_datasetInfo.dimensions(variablesToExport(iiVar))'];
     dimensionsSize = [dimensionsSize nctoolbox_datasetInfo.size(variablesToExport(iiVar))];
@@ -203,34 +194,34 @@ for iiDim=1:length(dimensionsList)
         
         if  sum(strcmp(listVariables,dimensionsList{iiDim})) ~= 0
             
-            if exist('geoBoundaryBox','var') & regexpi(dimensionsList{iiDim},'lat')
-                latFullGrid = nctoolbox_datasetInfo.data(dimensionsList( ~cellfun('isempty',regexpi(dimensionsList,'lat')) ));
-                indexLat = latFullGrid >=  geoBoundaryBox(3) &  latFullGrid <=  geoBoundaryBox(4);
-                latToKeep = latFullGrid(indexLat);
-                if isempty(latToKeep)
-                    warning('No data found in geoBoundaryBox. subset is cancelled : all data is harvested');
-                end
-                data = latToKeep;
-                
-            elseif  exist('geoBoundaryBox','var') & regexpi(dimensionsList{iiDim},'lon')
-                lonFullGrid = nctoolbox_datasetInfo.data(dimensionsList( ~cellfun('isempty',regexpi(dimensionsList,'lon')) ));
-                lonFullGrid_bckp = lonFullGrid;
-                % we need to transform lon values in case they go from -180
-                % to 180. we prefer 0 to 360 for geoBoundaryBox
-                lonFullGrid (lonFullGrid<0) = lonFullGrid (lonFullGrid<0) +360;
-                indexLon = lonFullGrid >=  geoBoundaryBox(1) &  lonFullGrid <=  geoBoundaryBox(2);
-                % but we don't want to change the values , so >
-                lonFullGrid = lonFullGrid_bckp;
-                lonToKeep = lonFullGrid(indexLon);
-                
-                if isempty(lonToKeep)
-                    warning('No data found in geoBoundaryBox. subset is cancelled : all data is harvested');
-                end
-                data = lonToKeep;
-                
-            else
+%            if exist('geoBoundaryBox','var') & regexpi(dimensionsList{iiDim},'lat')
+%                latFullGrid = nctoolbox_datasetInfo.data(dimensionsList( ~cellfun('isempty',regexpi(dimensionsList,'lat')) ));
+%                indexLat = latFullGrid >=  geoBoundaryBox(3) &  latFullGrid <=  geoBoundaryBox(4);
+%                latToKeep = latFullGrid(indexLat);
+%                if isempty(latToKeep)
+%                    warning('No data found in geoBoundaryBox. subset is cancelled : all data is harvested');
+%                end
+%                data = latToKeep;
+%                
+%            elseif  exist('geoBoundaryBox','var') & regexpi(dimensionsList{iiDim},'lon')
+%                lonFullGrid = nctoolbox_datasetInfo.data(dimensionsList( ~cellfun('isempty',regexpi(dimensionsList,'lon')) ));
+%                lonFullGrid_bckp = lonFullGrid;
+%                % we need to transform lon values in case they go from -180
+%                % to 180. we prefer 0 to 360 for geoBoundaryBox
+%                lonFullGrid (lonFullGrid<0) = lonFullGrid (lonFullGrid<0) +360;
+%                indexLon = lonFullGrid >=  geoBoundaryBox(1) &  lonFullGrid <=  geoBoundaryBox(2);
+%                % but we don't want to change the values , so >
+%                lonFullGrid = lonFullGrid_bckp;
+%                lonToKeep = lonFullGrid(indexLon);
+%                
+%                if isempty(lonToKeep)
+%                    warning('No data found in geoBoundaryBox. subset is cancelled : all data is harvested');
+%                end
+%                data = lonToKeep;
+%                
+%            else
                 data =  nctoolbox_datasetInfo.data(dimensionsList(iiDim));
-            end
+%            end
             
             if isnumeric(data) && ~(strcmpi('time',dimensionsList{iiDim}) ...
                     || strcmpi('JULD',dimensionsList{iiDim}) ) % basically, if it's a normal dimension and not a time dimension, then we change the type from double to single
@@ -265,22 +256,21 @@ for iiDim=1:length(dimensionsList)
     clear data
 end
 
-if exist('geoBoundaryBox','var')
-    if exist('lonToKeep','var') || exist('latToKeep','var')
-        if isempty(lonToKeep) ||   isempty(latToKeep)
-            clear  geoBoundaryBox
-            % we do this in case we had a warning above saying lonToKeep or
-            % latToKeep were empty
-            
-        end
-    else
-        clear  geoBoundaryBox
-    end
-end
+%if exist('geoBoundaryBox','var')
+%    if exist('lonToKeep','var') || exist('latToKeep','var')
+%        if isempty(lonToKeep) ||   isempty(latToKeep)
+%            clear  geoBoundaryBox
+%            % we do this in case we had a warning above saying lonToKeep or
+%            % latToKeep were empty
+%            
+%        end
+%    else
+%        clear  geoBoundaryBox
+%    end
+%end
+
 %% get variables , only QC ones
-for iiVar=1:length(variablesToExport)
-    
-    
+for iiVar=1:length(variablesToExport)    
     dimensionAssociated = nctoolbox_datasetInfo.dimensions(variablesToExport(iiVar))';
     
     dataset.variables.(variablesToExport{iiVar}).dimensions = [dimensionAssociated];
@@ -301,38 +291,38 @@ for iiVar=1:length(variablesToExport)
     if ~strcmpi (parserOptionValue,'metadata')
         if sum( strcmpi(variablesChoosenByUser, (variablesToExport{iiVar})) ~= 0)
             
-            if exist('geoBoundaryBox','var') &&  (...
-                    ~isempty(strcmpi('lon',dataset.variables.(variablesToExport{iiVar}).dimensions)) || ...
-                    ~isempty(strcmpi('lat',dataset.variables.(variablesToExport{iiVar}).dimensions)) )
-                lonPositionInDimensionOrder = find (strcmpi('lon',dataset.variables.(variablesToExport{iiVar}).dimensions), 1);
-                latPositionInDimensionOrder = find (strcmpi('lat',dataset.variables.(variablesToExport{iiVar}).dimensions), 1);
-                
-                firstIndex =  ones(size(dataset.variables.(variablesToExport{iiVar}).dimensions)); %initialise
-                firstIndex(lonPositionInDimensionOrder) = find(indexLon, 1,'first');
-                firstIndex(latPositionInDimensionOrder) = find(indexLat, 1,'first');
-                
-                lastIndex =  ones(size(dataset.variables.(variablesToExport{iiVar}).dimensions)); %initialise
-                lastIndex(lonPositionInDimensionOrder) = find(indexLon, 1,'last');
-                lastIndex(latPositionInDimensionOrder) = find(indexLat, 1,'last');
-                
-                % we need to find the size of the other dimensions to populate lastIndex
-                % properly for the non Lat and Lon dimensions.
-                
-                %first we look for all the non lat and lon dimensions the variable depends
-                %of
-                otherDims = setdiff((1:length(dataset.variables.(variablesToExport{iiVar}).dimensions)),[lonPositionInDimensionOrder,latPositionInDimensionOrder]);
-                
-                % and we look for the size of each dimension to populate lastIndex
-                for iiotherDims = 1:length(otherDims)
-                    lastIndex(iiotherDims) = length(dataset.dimensions.(dataset.variables.(variablesToExport{iiVar}).dimensions{iiotherDims}).data);
-                end
-                
-                % finally we harvest only the indexes we need
-                data =  nctoolbox_datasetInfo.data(variablesToExport(iiVar),firstIndex,lastIndex);
-                
-            else
+%            if exist('geoBoundaryBox','var') &&  (...
+%                    ~isempty(strcmpi('lon',dataset.variables.(variablesToExport{iiVar}).dimensions)) || ...
+%                    ~isempty(strcmpi('lat',dataset.variables.(variablesToExport{iiVar}).dimensions)) )
+%                lonPositionInDimensionOrder = find (strcmpi('lon',dataset.variables.(variablesToExport{iiVar}).dimensions), 1);
+%                latPositionInDimensionOrder = find (strcmpi('lat',dataset.variables.(variablesToExport{iiVar}).dimensions), 1);
+%                
+%                firstIndex =  ones(size(dataset.variables.(variablesToExport{iiVar}).dimensions)); %initialise
+%                firstIndex(lonPositionInDimensionOrder) = find(indexLon, 1,'first');
+%                firstIndex(latPositionInDimensionOrder) = find(indexLat, 1,'first');
+%                
+%                lastIndex =  ones(size(dataset.variables.(variablesToExport{iiVar}).dimensions)); %initialise
+%                lastIndex(lonPositionInDimensionOrder) = find(indexLon, 1,'last');
+%                lastIndex(latPositionInDimensionOrder) = find(indexLat, 1,'last');
+%                
+%                % we need to find the size of the other dimensions to populate lastIndex
+%                % properly for the non Lat and Lon dimensions.
+%                
+%                %first we look for all the non lat and lon dimensions the variable depends
+%                %of
+%                otherDims = setdiff((1:length(dataset.variables.(variablesToExport{iiVar}).dimensions)),[lonPositionInDimensionOrder,latPositionInDimensionOrder]);
+%                
+%                % and we look for the size of each dimension to populate lastIndex
+%                for iiotherDims = 1:length(otherDims)
+%                    lastIndex(iiotherDims) = length(dataset.dimensions.(dataset.variables.(variablesToExport{iiVar}).dimensions{iiotherDims}).data);
+%                end
+%                
+%                % finally we harvest only the indexes we need
+%                data =  nctoolbox_datasetInfo.data(variablesToExport(iiVar),firstIndex,lastIndex);
+%                
+%            else
                 data =  (nctoolbox_datasetInfo.data(variablesToExport(iiVar)));
-            end
+%            end
             if isnumeric(data) && ~(strcmpi('time',variablesToExport{iiVar}) ...
                     || strcmpi('JULD',variablesToExport{iiVar}) ) % basically, if it's a normal dimension and not a time dimension, then we change the type from double to single
                 data = single(data);
@@ -346,27 +336,7 @@ for iiVar=1:length(variablesToExport)
             clear data
         end
     end
-    %     dimensionAssociated = nctoolbox_datasetInfo.dimensions(listVariables_NOQC(iiVar))';
-    %     dataset.variables.(variablesList{iiVar}).dimensions = [dimensionAssociated];
-    %     varAttributes = nctoolbox_datasetInfo.attributes(variablesList(iiVar));
-    %
-    %     for iiVarAttributes=1:size(varAttributes,1)
-    %         attName=(varAttributes{iiVarAttributes,1});
-    %         if  strfind(attName(1),'_') %remove the underscore at the beginning of an attribute
-    %             attName=attName(2:end);
-    %         end
-    %         dataset.variables.(variablesList{iiVar}).(attName) = varAttributes{iiVarAttributes,2};
-    %     end
-    %
-    %     if ~strcmpi (parserOptionValue,'metadata')
-    %         if sum( strcmpi(variablesChoosenByUser, (variablesList{iiVar})) ~= 0)
-    %
-    %             data =  nctoolbox_datasetInfo.data(variablesList(iiVar));
-    %
-    %             dataset.variables.(variablesList{iiVar}).data = data;
-    %             clear data
-    %         end
-    %     end
+
 end
 
 
@@ -502,7 +472,7 @@ end
 
 %warning, don't change the following order. It is important to clean first,
 %then to modify the values such as time. Otherwise there might be some
-%conflits with the valid min and max values ...
+%conflicts with the valid min and max values ...
 
 %% clean variable and dimensions values - fillvalue offset ...
 if ~strcmpi (parserOptionValue,'metadata')
