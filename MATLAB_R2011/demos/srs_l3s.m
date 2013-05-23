@@ -9,9 +9,9 @@
 % The script is distributed under the terms of the GNU General Public License
 
 srs_URL = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/eMII/demos/SRS/SRS-SST/L3S-01day/L3S_1d_night/2013/20130401152000-ABOM-L3S_GHRSST-SSTskin-AVHRR_D-1d_night-v02.0-fv01.0.nc.gz';
-srsL3S_DATA = ncParse(srs_URL,'geoBoundaryBox', [165 181 -50 -30]) ; % New Zealand subset across the 180th meridian
+srsL3S_DATA = ncParse(srs_URL) ;
  
-step = 1; % we take one point out of 'step'. Only to make it faster to plot on Matlab
+step = 10; % we take one point out of 'step'. Only to make it faster to plot on Matlab
 % squeeze the data to get rid of the time dimension in the variable shape 
 sst = squeeze(srsL3S_DATA.variables.sea_surface_temperature.data(1,1:step:end,1:step:end));
 lat = squeeze(srsL3S_DATA.dimensions.lat.data(1:step:end));
