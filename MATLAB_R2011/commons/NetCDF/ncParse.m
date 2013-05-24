@@ -147,7 +147,8 @@ end
 if ~exist('variablesChoosenByUser','var')
     variablesChoosenByUser=variablesList;
 else
-    if sum(strcmpi(variablesChoosenByUser, (variablesList))) == 0
+    index_equivalentVarChoosen = (find(ismember( variablesList, variablesChoosenByUser)==1)');
+    if isempty(index_equivalentVarChoosen)
         warning('variable does not exist in dataset','Variable %s does not exist in the NetCDF file. Only metadata will be parsed',variablesChoosenByUser);
     end
     %check variable exist
