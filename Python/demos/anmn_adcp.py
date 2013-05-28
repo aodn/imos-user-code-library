@@ -50,7 +50,7 @@ flag_meanings = (UCURqc.flag_meanings).split()
 
 # create a profile index variable because pcolor can't handle datetime
 # objects on the x axis
-profIndex = arange(len(timeData)
+profIndex = arange(len(timeData))
 
 # create a matrices of the coordinate variables (same shape as
 # uCurrentData) to be used with pcolor
