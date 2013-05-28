@@ -10,17 +10,14 @@
 # Copyright 2013 IMOS
 # The script is distributed under the terms of the GNU General Public License
 
-from netCDF4 import Dataset
-from datetime import datetime, timedelta
-from pylab import * 
 import numpy
-import matplotlib.pyplot as plt    
-from imosNetCDF import *
+import matplotlib.pyplot as plt
+from netCDF4 import Dataset, num2date
+
 
 ## AATAMS - Animal Tagging and Monitoring
-aatams_URL = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/eMII/demos/AATAMS/marine_mammal_ctd-tag/2009_2011_ct64_Casey_Macquarie/ct64-M746-09/IMOS_AATAMS-SATTAG_TSP_20100205T043000Z_ct64-M746-09_END-20101029T071000Z_FV00.nc';
+aatams_URL = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/eMII/demos/AATAMS/marine_mammal_ctd-tag/2009_2011_ct64_Casey_Macquarie/ct64-M746-09/IMOS_AATAMS-SATTAG_TSP_20100205T043000Z_ct64-M746-09_END-20101029T071000Z_FV00.nc'
 aatams_DATA = Dataset(aatams_URL) 
-metadata = getAttNC(aatams_DATA)
 
 nProfiles = len(aatams_DATA.dimensions['profiles']) # the number of profiles undertaken by the seal
 parentIndex = aatams_DATA.variables['parentIndex'][:] #for each obs which profile it is linked to
@@ -64,8 +61,8 @@ lonProfile = numpy.array(aatams_DATA.variables['LONGITUDE'][:])
 #For a nicer plot, we change the values to the [0 360] range
 lonProfile[lonProfile < 0 ] = lonProfile[lonProfile < 0 ] +360 
 
-# we convert the time values into a python time object
-timeData = convertTime(TIME) # one value per profile
+# convert the time values into an array of datetime objects
+timeData = num2date(TIME[:], TIME.units)   # one value per profile
 
 # creation of a profile variable array
 sizer = ones((1,maxObsProfile),'float') 
@@ -81,7 +78,7 @@ subplot(311)
 pcolor(prof_2D, -PRES_DATA_reshaped, TEMP_DATA_reshaped)
 cbar = colorbar()
 cbar.ax.set_ylabel(TEMP.long_name + ' in ' + TEMP.units)
-title(metadata['species_name'] + ' - released in ' + metadata['release_site'] +' \n animal reference number : ' + metadata['unique_reference_code'])
+title(aatams_DATA.species_name + ' - released in ' + aatams_DATA.release_site +' \n animal reference number : ' + aatams_DATA.unique_reference_code)
 xlabel('Profile Index')
 ylabel(PRES.long_name + ' in negative ' + PRES.units)
 
@@ -124,7 +121,7 @@ ylabel('Profile Index')
 profileToPlot = 1# this is arbitrary. We can plot all profiles from 1 to nProfiles, modify profileToPlot if desired
 figure2 = figure(num=None, figsize=(7, 10), dpi=80, facecolor='w', edgecolor='k')
 plot (TEMP_DATA_reshaped[profileToPlot,:],-PRES_DATA_reshaped[profileToPlot,:])
-title(metadata['title'] + '\nlocation ' + "%0.2f" % latProfile[profileToPlot] + '/' + "%0.2f" % lonProfile[profileToPlot] + '\n' + timeData[profileToPlot].strftime('%d/%m/%Y'))
+title(aatams_DATA.title + '\nlocation ' + "%0.2f" % latProfile[profileToPlot] + '/' + "%0.2f" % lonProfile[profileToPlot] + '\n' + timeData[profileToPlot].strftime('%d/%m/%Y'))
 xlabel(TEMP.long_name +  ' in ' + TEMP.units)
 ylabel(PRES.long_name +  ' in negative ' + PRES.units)
 plt.show()
