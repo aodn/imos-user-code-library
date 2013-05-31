@@ -11,7 +11,9 @@
 # The script is distributed under the terms of the GNU General Public License
 
 import numpy
-import matplotlib.pyplot as plt
+from matplotlib.pyplot import (figure, subplot, pcolor, colorbar, title, 
+                               xlabel, ylabel, plot, setp, show)
+from matplotlib.dates import MONTHLY, DateFormatter, rrulewrapper, RRuleLocator
 from netCDF4 import Dataset, num2date
 
 
@@ -20,42 +22,45 @@ aatams_URL = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/eMII/demos/AATAMS/ma
 aatams_DATA = Dataset(aatams_URL) 
 
 nProfiles = len(aatams_DATA.dimensions['profiles']) # the number of profiles undertaken by the seal
-parentIndex = aatams_DATA.variables['parentIndex'][:] #for each obs which profile it is linked to
+parentIndex = aatams_DATA.variables['parentIndex'][:] #for each obs which profile it belongs to
 
 # loading of the variable objects
 TEMP = aatams_DATA.variables['TEMP']
 PRES = aatams_DATA.variables['PRES']
 PSAL = aatams_DATA.variables['PSAL']
 TIME = aatams_DATA.variables['TIME']
+LATITUDE = aatams_DATA.variables['LATITUDE']
+LONGITUDE = aatams_DATA.variables['LONGITUDE']
 
-# creation of a 2 dimension array for temperature, pressure and salinity  
+# extract the temperature, pressure and salinity values
 psalData = aatams_DATA.variables['PSAL'][:]
 tempData = aatams_DATA.variables['TEMP'][:]
 presData = aatams_DATA.variables['PRES'][:]
 
-# we want to know the maximum number of observations (or depth level) per profile 
-# for all the profile. This number 'maxObsProfile' will be used to create a 2d 
-# array for Temperature salinity and pressure. 
-maxObsProfile = 0.
-for profileNumber in range(1,nProfiles):
-    indexVar = where(parentIndex == profileNumber)
-    if size(indexVar) > maxObsProfile:
-        maxObsProfile = size(indexVar)
+# We want to know the maximum number of observations (or depth level) per profile 
+# for every profile. This number 'maxObsProfile' will be used to create 2-dimensional
+# arrays for Temperature, salinity and pressure. 
+maxObsProfile = 0
+for profileNumber in range(1, nProfiles+1):
+    nObs = sum(parentIndex == profileNumber)
+    if nObs > maxObsProfile:
+        maxObsProfile = nObs
 
-# we recreate those variables to have a 2d array
+# we create 2-d arrays to represent the profile variables
 TEMP_DATA_reshaped = numpy.empty((nProfiles,maxObsProfile,))
 PSAL_DATA_reshaped = numpy.empty((nProfiles,maxObsProfile,))
 PRES_DATA_reshaped = numpy.empty((nProfiles,maxObsProfile,))
 
 for profileNumber in range(nProfiles):
-    indexVar = where(parentIndex == profileNumber)
-    TEMP_DATA_reshaped[profileNumber,0:size(indexVar)] = tempData[indexVar]
-    PSAL_DATA_reshaped[profileNumber][range(0,size(indexVar))] = psalData[indexVar]
-    PRES_DATA_reshaped[profileNumber][range(0,size(indexVar))] = presData[indexVar]
+    indexVar = numpy.where(parentIndex == profileNumber+1)
+    nObs = numpy.size(indexVar)
+    TEMP_DATA_reshaped[profileNumber,0:nObs] = tempData[indexVar]
+    PSAL_DATA_reshaped[profileNumber,0:nObs] = psalData[indexVar]
+    PRES_DATA_reshaped[profileNumber,0:nObs] = presData[indexVar]
 
 # we load the latitude and longitude values for all the profiles
-latProfile =  numpy.array(aatams_DATA.variables['LATITUDE'][:])
-lonProfile = numpy.array(aatams_DATA.variables['LONGITUDE'][:])
+latProfile = LATITUDE[:]
+lonProfile = LONGITUDE[:]
 
 #longitude in the original dataset goes from -180 to +180
 #For a nicer plot, we change the values to the [0 360] range
@@ -65,9 +70,9 @@ lonProfile[lonProfile < 0 ] = lonProfile[lonProfile < 0 ] +360
 timeData = num2date(TIME[:], TIME.units)   # one value per profile
 
 # creation of a profile variable array
-sizer = ones((1,maxObsProfile),'float') 
+sizer = numpy.ones((1,maxObsProfile),'float') 
 #observation = range(nProfiles)
-profIndex = array(range(nProfiles))
+profIndex = numpy.array(range(nProfiles))
 profIndex = profIndex.reshape(nProfiles,1) 
 prof_2D =  profIndex * sizer
 
@@ -78,11 +83,11 @@ subplot(311)
 pcolor(prof_2D, -PRES_DATA_reshaped, TEMP_DATA_reshaped)
 cbar = colorbar()
 cbar.ax.set_ylabel(TEMP.long_name + ' in ' + TEMP.units)
-title(aatams_DATA.species_name + ' - released in ' + aatams_DATA.release_site +' \n animal reference number : ' + aatams_DATA.unique_reference_code)
+title(aatams_DATA.species_name + ' - released in ' + aatams_DATA.release_site +
+      ' \n animal reference number : ' + aatams_DATA.unique_reference_code)
 xlabel('Profile Index')
 ylabel(PRES.long_name + ' in negative ' + PRES.units)
 
-from matplotlib.dates import MONTHLY, DateFormatter, rrulewrapper, RRuleLocator
 rule = rrulewrapper(MONTHLY, bymonthday=1, interval=1)
 formatter = DateFormatter('%d/%m/%y')
 loc = RRuleLocator(rule)
@@ -95,7 +100,7 @@ ax3.xaxis.set_major_formatter(formatter)
 labels = ax3.get_xticklabels()
 setp(labels, rotation=30, fontsize=10)
 xlabel(TIME.long_name  + ' in ' +  'dd/mm/yy' )
-ylabel(aatams_DATA.variables['LONGITUDE'].long_name + ' in ' + aatams_DATA.variables['LONGITUDE'].units)
+ylabel(LONGITUDE.long_name + ' in ' + LONGITUDE.units)
 
 #plot the LAT timeseries
 ax4 = subplot(235)
@@ -105,7 +110,7 @@ ax4.xaxis.set_major_formatter(formatter)
 labels = ax4.get_xticklabels()
 setp(labels, rotation=30, fontsize=10)
 xlabel(TIME.long_name  + ' in ' +  'dd/mm/yy' )
-ylabel(aatams_DATA.variables['LATITUDE'].long_name  + ' in ' +  aatams_DATA.variables['LATITUDE'].units)
+ylabel(LATITUDE.long_name  + ' in ' +  LATITUDE.units)
 
 #plot the profile index with time values
 ax5 = subplot(236)
@@ -117,11 +122,15 @@ setp(labels, rotation=30, fontsize=10)
 xlabel(TIME.long_name  + ' in ' +  'dd/mm/yy' )
 ylabel('Profile Index')
 
-#plot of a single profile
-profileToPlot = 1# this is arbitrary. We can plot all profiles from 1 to nProfiles, modify profileToPlot if desired
+# plot of a single profile
+# We can plot any profile from 0 to nProfiles-1, modify profileToPlot if desired
+profileToPlot = 1
 figure2 = figure(num=None, figsize=(7, 10), dpi=80, facecolor='w', edgecolor='k')
 plot (TEMP_DATA_reshaped[profileToPlot,:],-PRES_DATA_reshaped[profileToPlot,:])
-title(aatams_DATA.title + '\nlocation ' + "%0.2f" % latProfile[profileToPlot] + '/' + "%0.2f" % lonProfile[profileToPlot] + '\n' + timeData[profileToPlot].strftime('%d/%m/%Y'))
+title('%s\nlocation %0.2f/%0.2f\n%s' % (aatams_DATA.title, 
+                                        latProfile[profileToPlot], lonProfile[profileToPlot], 
+                                        timeData[profileToPlot].strftime('%d/%m/%Y'))
+)
 xlabel(TEMP.long_name +  ' in ' + TEMP.units)
 ylabel(PRES.long_name +  ' in negative ' + PRES.units)
-plt.show()
+show()
