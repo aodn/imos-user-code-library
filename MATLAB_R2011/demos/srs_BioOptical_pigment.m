@@ -17,8 +17,12 @@ nProfiles = length (srs_DATA.dimensions.profile.data);% number of profiles
 ProfileToPlot = 10; % this is arbitrary. We can plot all profiles from 1 to nProfiles
 nObsProfile = srs_DATA.variables.rowSize.data(ProfileToPlot);  %number of observations for ProfileToPlot
 timeProfile = srs_DATA.variables.TIME.data(ProfileToPlot);
-latProfile = srs_DATA.variables.LATITUDE.data(ProfileToPlot);
-lonProfile = srs_DATA.variables.LONGITUDE.data(ProfileToPlot);
+
+% lat and lon depend of station index. while time depends of profile
+stationName = srs_DATA.variables.station_name.data;
+stationIndex = srs_DATA.variables.station_index.data;
+latProfile = srs_DATA.variables.LATITUDE.data(stationIndex(ProfileToPlot));
+lonProfile = srs_DATA.variables.LONGITUDE.data(stationIndex(ProfileToPlot));
  
 % we look for the observations indexes related to the chosen profile
 indexObservationStart = sum( srs_DATA.variables.rowSize.data(1:ProfileToPlot)) - srs_DATA.variables.rowSize.data(ProfileToPlot) +1;
