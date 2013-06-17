@@ -8,6 +8,10 @@
 # Copyright 2013 IMOS
 # The script is distributed under the terms of the GNU General Public License
 
+## Load the ncdf4 package and NetCDF parser function
+library(ncdf4)
+# source( '/path/to/ncParse.R') #please uncomment this line and point the path to the ncParse.R file downloaded from the IMOS User Code Library git repository
+
 ## Locate and parse NetCDF file
 file_URL <- 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/eMII/demos/FAIMMS/Myrmidon_Reef/Sensor_Float_1/water_temperature/sea_water_temperature@5.0m_channel_114/2012/QAQC/IMOS_FAIMMS_T_20121201T000000Z_FV01_END-20130101T000000Z_C-20130426T102459Z.nc'
 dataset <- ncParse( file_URL)

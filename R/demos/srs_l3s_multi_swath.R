@@ -1,5 +1,10 @@
 # Example to plot SRS - GHRSST - L3S multi swath
 #
+# Comments : the ‘aqfig’ and ‘maps’ packages need to be installed and loaded.
+#            in the R console, type:
+#		install.packages("raster")
+#		install.packages("maps")
+#
 # Author: Xavier Hoenner, IMOS/eMII
 # email: xavier.hoenner@utas.edu.au
 # Website: http://imos.org.au/  https://github.com/aodn/imos_user_code_library
@@ -7,6 +12,10 @@
 #
 # Copyright 2013 IMOS
 # The script is distributed under the terms of the GNU General Public License
+
+## Load the ncdf4 package and NetCDF parser function
+library(ncdf4)
+# source( '/path/to/ncParse.R') #please uncomment this line and point the path to the ncParse.R file downloaded from the IMOS User Code Library git repository
 
 ## Locate and parse a subset of a local NetCDF file
 file <- '/path/to/20130401152000-ABOM-L3S_GHRSST-SSTskin-AVHRR_D-1d_night-v02.0-fv01.0.nc'

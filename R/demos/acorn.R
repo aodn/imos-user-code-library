@@ -1,5 +1,9 @@
 # Example to plot ACORN datasets
 #
+# Comments : the ‘aqfig’ and ‘maps’ packages need to be installed and loaded.
+#            in the R console, type:
+#		install.packages("raster")
+#
 # Author: Xavier Hoenner, IMOS/eMII
 # email: xavier.hoenner@utas.edu.au
 # Website: http://imos.org.au/  https://github.com/aodn/imos_user_code_library
@@ -7,6 +11,10 @@
 #
 # Copyright 2013 IMOS
 # The script is distributed under the terms of the GNU General Public License
+
+## Load the ncdf4 package and NetCDF parser function
+library(ncdf4)
+# source( '/path/to/ncParse.R') #please uncomment this line and point the path to the ncParse.R file downloaded from the IMOS User Code Library git repository
 
 ## Locate and parse NetCDF file
 file_URL <- 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/eMII/demos/ACORN/monthly_gridded_1h-avg-current-map_non-QC/TURQ/2012/IMOS_ACORN_V_20121001T000000Z_TURQ_FV00_monthly-1-hour-avg_END-20121029T180000Z_C-20121030T160000Z.nc.gz'

@@ -1,12 +1,21 @@
 # Example to plot AATAMS datasets
 #
+# Comments : the ‘aqfig’ and ‘maps’ packages need to be installed and loaded.
+#            in the R console, type:
+#		install.packages("aqfig")
+#		install.packages("maps")
+#		
 # Author: Xavier Hoenner, IMOS/eMII
 # email: xavier.hoenner@utas.edu.au
 # Website: http://imos.org.au/  https://github.com/aodn/imos_user_code_library
 # June 2013; Last revision: 13-June-2013
-#
+# 
 # Copyright 2013 IMOS
 # The script is distributed under the terms of the GNU General Public License
+
+## Load the ncdf4 package and NetCDF parser function
+library(ncdf4)
+# source( '/path/to/ncParse.R') #please uncomment this line and point the path to the ncParse.R file downloaded from the IMOS User Code Library git repository
 
 ## Locate and parse NetCDF file
 file_URL <- 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/eMII/demos/AATAMS/marine_mammal_ctd-tag/2009_2011_ct64_Casey_Macquarie/ct64-M746-09/IMOS_AATAMS-SATTAG_TSP_20100205T043000Z_ct64-M746-09_END-20101029T071000Z_FV00.nc'

@@ -1,5 +1,9 @@
 # Example to plot SRS - BioOptical absorption
 #
+# Comments : the ‘aqfig’ and ‘maps’ packages need to be installed and loaded.
+#            in the R console, type:
+#		install.packages("raster")
+#
 # Author: Xavier Hoenner, IMOS/eMII
 # email: xavier.hoenner@utas.edu.au
 # Website: http://imos.org.au/  https://github.com/aodn/imos_user_code_library
@@ -7,6 +11,11 @@
 #
 # Copyright 2013 IMOS
 # The script is distributed under the terms of the GNU General Public License
+
+## Load the ncdf4 package and NetCDF parser function
+library(ncdf4)
+# source( '/path/to/ncParse.R') #please uncomment this line and point the path to the ncParse.R file downloaded from the IMOS User Code Library git repository
+
 
 ## Locate and parse NetCDF file
 file_URL <- 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/eMII/demos/SRS/BioOptical/1997_cruise-FR1097/absorption/IMOS_SRS-OC-BODBAW_X_19971201T052600Z_FR1097-absorption-CDOM_END-19971207T180500Z_C-20121129T130000Z.nc'
