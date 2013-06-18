@@ -1,9 +1,5 @@
 # Example to plot SRS - BioOptical absorption
 #
-# Comments : the ‘aqfig’ and ‘maps’ packages need to be installed and loaded.
-#            in the R console, type:
-#		install.packages("raster")
-#
 # Author: Xavier Hoenner, IMOS/eMII
 # email: xavier.hoenner@utas.edu.au
 # Website: http://imos.org.au/  https://github.com/aodn/imos_user_code_library
@@ -16,7 +12,6 @@
 library(ncdf4)
 # source( '/path/to/ncParse.R') #please uncomment this line and point the path to the ncParse.R file downloaded from the IMOS User Code Library git repository
 
-
 ## Locate and parse NetCDF file
 file_URL <- 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/eMII/demos/SRS/BioOptical/1997_cruise-FR1097/absorption/IMOS_SRS-OC-BODBAW_X_19971201T052600Z_FR1097-absorption-CDOM_END-19971207T180500Z_C-20121129T130000Z.nc'
 dataset <- ncParse( file_URL)
@@ -27,11 +22,12 @@ profile <- 10
 nobs <- dataset$variables$rowSize$data[profile] # Number of observations for this profile
 startobs <- sum( dataset$variables$rowSize$data[1 : ( profile - 1)]) + 1
 endobs <- startobs + ( nobs -1)
+station_index <- dataset$variables$station_index$data
 
 ## Extract data from variables and dimensions
 date <- dataset$variables$TIME$data[profile]
-lon <- dataset$variables$LONGITUDE$data[profile]
-lat <- dataset$variables$LATITUDE$data[profile]
+lon <- dataset$variables$LONGITUDE$data[station_index[profile]]
+lat <- dataset$variables$LATITUDE$data[station_index[profile]]
 depth <- dataset$variables$DEPTH$data[startobs:endobs]
 abscoeff <- dataset$variables$ag$data[,startobs:endobs]
 wavelength <- dataset$dimensions$wavelength$data
