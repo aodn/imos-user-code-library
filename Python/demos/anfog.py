@@ -24,15 +24,17 @@ PSAL = anfog_DATA.variables['PSAL']
 DEPTH =  anfog_DATA.variables['DEPTH']
 PSAL_qcFlag = anfog_DATA.variables['PSAL_quality_control']
 
-# convert the time values into an array of datetime objects
+# Extract variable values and convert the time values into an array of datetime objects
 timeData = num2date(TIME[:], TIME.units)
+psalData = PSAL[:] 
+depthData = DEPTH[:]
 
-qcLevel = 1 # we use the quality control flags to only select the good_data
+# use the quality control flags to only select the good_data
+qcLevel = 1 
 index_qcLevel = where( PSAL_qcFlag[:] == qcLevel)
-
-psalData = PSAL[index_qcLevel] 
 timeData = timeData[index_qcLevel]
-depthData = DEPTH[index_qcLevel]
+psalData = psalData[index_qcLevel] 
+depthData = depthData[index_qcLevel]
 
 
 # plot depth and salinity timeseries
