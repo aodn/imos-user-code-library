@@ -10,18 +10,16 @@
 # Copyright 2013 IMOS
 # The script is distributed under the terms of the GNU General Public License
 
-from netCDF4 import Dataset
-from datetime import datetime, timedelta
-from pylab import * 
-import numpy
-import matplotlib.pyplot as plt    
-from imosNetCDF import *
+
+from numpy import where
+from netCDF4 import Dataset, num2date
+from matplotlib.pyplot import figure, xlabel, ylabel, title, show
 
 ############# ANFOG
 anfog_URL = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/eMII/demos/ANFOG/seaglider/SOTS20110420/IMOS_ANFOG_BCEOSTUV_20110420T111022Z_SG517_FV01_timeseries_END-20110420T140511Z.nc' 
 anfog_DATA = Dataset(anfog_URL) 
-metadata = getAttNC(anfog_DATA) 
 
+TIME = anfog_DATA.variables['TIME']
 PSAL = anfog_DATA.variables['PSAL']
 DEPTH =  anfog_DATA.variables['DEPTH']
 PSAL_qcFlag = anfog_DATA.variables['PSAL_quality_control']
@@ -30,7 +28,8 @@ qcLevel = 1 # we use the quality control flags to only select the good_data
 index_qcLevel = where( PSAL_qcFlag[:] == qcLevel)
 
 psalData = PSAL[index_qcLevel] 
-timeData = convertTime(anfog_DATA.variables['TIME'])[index_qcLevel]
+timeData = num2date(TIME[:], TIME.units)
+timeData = timeData[index_qcLevel]
 depthData = DEPTH[index_qcLevel]
 
 figure1 = figure( figsize=(13, 10), dpi=80, facecolor='w', edgecolor='k')
@@ -49,6 +48,6 @@ ax2.set_ylabel(DEPTH.standard_name + ' in ' + DEPTH.units, color='r')
 for tl in ax2.get_yticklabels():
     tl.set_color('r')
 
-xlabel(anfog_DATA.variables['TIME'].standard_name)
-title(metadata['title'] +  ' starting at ' + metadata['time_coverage_start']  + 'UTC')
-plt.show()
+xlabel(TIME.standard_name)
+title(anfog_DATA.title +  ' starting at ' + anfog_DATA.time_coverage_start  + 'UTC')
+show()
