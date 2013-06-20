@@ -24,19 +24,24 @@ PSAL = anfog_DATA.variables['PSAL']
 DEPTH =  anfog_DATA.variables['DEPTH']
 PSAL_qcFlag = anfog_DATA.variables['PSAL_quality_control']
 
+# convert the time values into an array of datetime objects
+timeData = num2date(TIME[:], TIME.units)
+
 qcLevel = 1 # we use the quality control flags to only select the good_data
 index_qcLevel = where( PSAL_qcFlag[:] == qcLevel)
 
 psalData = PSAL[index_qcLevel] 
-timeData = num2date(TIME[:], TIME.units)
 timeData = timeData[index_qcLevel]
 depthData = DEPTH[index_qcLevel]
 
+
+# plot depth and salinity timeseries
 figure1 = figure( figsize=(13, 10), dpi=80, facecolor='w', edgecolor='k')
 
 ax1 = figure1.add_subplot(111)
 ax1.plot(timeData,psalData, 'b-')
-ax1.set_xlabel('time (s)')
+ax1.set_title(anfog_DATA.title +  ' starting at ' + anfog_DATA.time_coverage_start  + 'UTC')
+ax1.set_xlabel(TIME.standard_name)
 # Make the y-axis label and tick labels match the line color.
 ax1.set_ylabel(PSAL.standard_name + ' in ' + PSAL.units, color='b')
 for tl in ax1.get_yticklabels():
@@ -48,6 +53,4 @@ ax2.set_ylabel(DEPTH.standard_name + ' in ' + DEPTH.units, color='r')
 for tl in ax2.get_yticklabels():
     tl.set_color('r')
 
-xlabel(TIME.standard_name)
-title(anfog_DATA.title +  ' starting at ' + anfog_DATA.time_coverage_start  + 'UTC')
 show()
