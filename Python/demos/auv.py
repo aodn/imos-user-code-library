@@ -10,21 +10,18 @@
 # Copyright 2013 IMOS
 # The script is distributed under the terms of the GNU General Public License
 
-from netCDF4 import Dataset
-from datetime import datetime, timedelta
-from pylab import * 
-import numpy
-import matplotlib.pyplot as plt    
-from imosNetCDF import *
+from netCDF4 import Dataset, num2date
+from matplotlib.pyplot import figure, xlabel, title, show
 
 ############# AUV
 auv_URL = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/eMII/demos/AUV/GBR201102/r20110301_012810_station1195_09_transect/hydro_netcdf/IMOS_AUV_ST_20110301T012815Z_SIRIUS_FV00.nc' 
 auv_DATA = Dataset(auv_URL) 
-metadata = getAttNC(auv_DATA) 
 
+TIME = auv_DATA.variables['TIME']
 tempData = auv_DATA.variables['TEMP']
-timeData = convertTime(auv_DATA.variables['TIME'])
 depthData = auv_DATA.variables['DEPTH']
+
+timeData = num2date(TIME[:], TIME.units)
 
 averageLat = auv_DATA.variables['LATITUDE'][:].mean()
 averageLon = auv_DATA.variables['LONGITUDE'][:].mean()
@@ -47,7 +44,7 @@ for tl in ax2.get_yticklabels():
     tl.set_color('r')
 
 
-xlabel(auv_DATA.variables['TIME'].standard_name)
+xlabel(TIME.standard_name)
 
-title('campaign ' + metadata['title'] +  '\nlocation:lat= ' + "%0.2f" % averageLat + '; lon='  + "%0.2f" % averageLon )
-plt.show()
+title('campaign ' + auv_DATA.title +  '\nlocation:lat= ' + "%0.2f" % averageLat + '; lon='  + "%0.2f" % averageLon )
+show()
