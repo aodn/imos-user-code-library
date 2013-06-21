@@ -18,33 +18,32 @@ auv_URL = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/eMII/demos/AUV/GBR20110
 auv_DATA = Dataset(auv_URL) 
 
 TIME = auv_DATA.variables['TIME']
-tempData = auv_DATA.variables['TEMP']
-depthData = auv_DATA.variables['DEPTH']
+TEMP = auv_DATA.variables['TEMP']
+DEPTH = auv_DATA.variables['DEPTH']
 
+# convert the time values into an array of datetime objects
 timeData = num2date(TIME[:], TIME.units)
 
 averageLat = auv_DATA.variables['LATITUDE'][:].mean()
 averageLon = auv_DATA.variables['LONGITUDE'][:].mean()
 
+
+# plot temperature and depth timeseries
 figure1 = figure( figsize=(10, 7), dpi=80, facecolor='w', edgecolor='k')
 
 ax1 = figure1.add_subplot(111)
-ax1.plot(timeData,tempData[:], 'b-')
-ax1.set_xlabel('time (s)')
+ax1.plot(timeData,TEMP[:], 'b-')
+ax1.set_title('campaign %s\nlocation: lat=%0.2f; lon=%0.2f' % (auv_DATA.title, averageLat, averageLon))
+ax1.set_xlabel(TIME.standard_name)
 # Make the y-axis label and tick labels match the line color.
-ax1.set_ylabel(tempData.standard_name + ' in ' + tempData.units, color='b')
+ax1.set_ylabel(TEMP.standard_name + ' in ' + TEMP.units, color='b')
 for tl in ax1.get_yticklabels():
     tl.set_color('b')
 
-
 ax2 = ax1.twinx()
-ax2.plot(timeData,depthData[:], 'r.')
-ax2.set_ylabel(depthData.standard_name + ' in ' + depthData.units, color='r')
+ax2.plot(timeData,DEPTH[:], 'r.')
+ax2.set_ylabel(DEPTH.standard_name + ' in ' + DEPTH.units, color='r')
 for tl in ax2.get_yticklabels():
     tl.set_color('r')
 
-
-xlabel(TIME.standard_name)
-
-title('campaign ' + auv_DATA.title +  '\nlocation:lat= ' + "%0.2f" % averageLat + '; lon='  + "%0.2f" % averageLon )
 show()
