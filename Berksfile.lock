@@ -1,0 +1,4 @@
+cookbook 'python', :locked_version => '1.3.4'
+cookbook 'imos_python', :path => '/Users/jburgess/git/imos_user_code_library/cookbooks/imos_python'
+cookbook 'build-essential', :locked_version => '1.4.0'
+cookbook 'yum', :locked_version => '2.3.0'
