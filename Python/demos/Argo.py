@@ -12,8 +12,8 @@
 
 from numpy import unique, ones, array
 from netCDF4 import Dataset, num2date
-from matplotlib.pyplot import (figure, subplot, pcolor, xlabel, ylabel, 
-                               title, setp, show)
+from matplotlib.pyplot import (figure, subplot, pcolor, colorbar, xlabel, ylabel, 
+                               title, plot, setp, show)
 from matplotlib.dates import MONTHLY, DateFormatter, rrulewrapper, RRuleLocator
 
 ############# Argo
