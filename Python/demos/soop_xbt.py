@@ -10,24 +10,24 @@
 # Copyright 2013 IMOS
 # The script is distributed under the terms of the GNU General Public License
 
-from netCDF4 import Dataset
-from datetime import datetime, timedelta
-from pylab import * 
-import numpy
-import matplotlib.pyplot as plt  
-from imosNetCDF import *
+import string
+import re 
+from numpy import ma, unique, shape, ones
+from netCDF4 import Dataset, num2date
+from matplotlib.pyplot import (figure, subplot, plot, xlabel, ylabel, title, 
+                               setp, show, pcolor, colorbar)
+from matplotlib.dates import MONTHLY, DateFormatter, rrulewrapper, RRuleLocator
 
 #### XBT
-xbt_URL = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/eMII/demos/SOOP/SOOP-XBT/aggregated_datasets/line_and_year/IX1/IMOS_SOOP-XBT_T_20040131T195300Z_IX1_FV01_END-20041221T214400Z.nc'
+# xbt_URL = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/eMII/demos/SOOP/SOOP-XBT/aggregated_datasets/line_and_year/IX1/IMOS_SOOP-XBT_T_20040131T195300Z_IX1_FV01_END-20041221T214400Z.nc'
+xbt_URL = '/home/mhidas/Downloads/IMOS_SOOP-XBT_T_20040131T195300Z_IX1_FV01_END-20041221T214400Z.nc'
 xbt_DATA = Dataset(xbt_URL) 
-metadata = getAttNC(xbt_DATA)
 
 qcFlag = 4 # flag value to eliminate (bad data)
 
 maxSample = len(xbt_DATA.variables['MAXZ'][:]) # 'maximum_number_of_samples_in_vertical_profile'
 nProfiles = len(xbt_DATA.variables['INSTANCE'][:]) # number of profiles
  
-import string, re 
 ## we look for all the profiles of a similar cruise
 cruiseData = xbt_DATA.variables['cruise_ID'][:]
 cruiseID = []
@@ -43,7 +43,7 @@ DEPTH = xbt_DATA.variables['DEPTH']
 TIME = xbt_DATA.variables['TIME']
 
 # we load the data for each cruise
-timeCruise =  convertTime(TIME)[indexCruiseToPlot]
+timeCruise =  num2date(TIME[:], TIME.units, TIME.calendar)[indexCruiseToPlot]
 latCruise =  xbt_DATA.variables['LATITUDE'][indexCruiseToPlot]
 lonCruise =  xbt_DATA.variables['LONGITUDE'][indexCruiseToPlot]
 
@@ -53,7 +53,6 @@ tempCruise =  TEMP[:,indexCruiseToPlot]
 depthCruise = DEPTH[:,indexCruiseToPlot]
 
 
-import numpy.ma as ma
 # we modify the values which we don't want to plot to replace them with the Fillvalue
 tempCruise[~indexGoodData] = xbt_DATA.variables['TEMP']._FillValue
 depthCruise[~indexGoodData] = xbt_DATA.variables['DEPTH']._FillValue 
@@ -74,7 +73,7 @@ subplot(311)
 pcolor(prof_2D, -depthCruise, tempCruise)
 cbar = colorbar()
 cbar.ax.set_ylabel(TEMP.long_name + ' in ' + TEMP.units)
-title(metadata['title'] + '\n Cruise  ' + cruiseToPlot + '-' + metadata['XBT_line_description'])
+title(xbt_DATA.title + '\n Cruise  ' + cruiseToPlot + '-' + xbt_DATA.XBT_line_description)
 xlabel('Profile Index')
 ylabel(DEPTH.long_name + ' in negative ' + DEPTH.units)
 
@@ -92,7 +91,6 @@ ylabel(xbt_DATA.variables['LATITUDE'].long_name  + ' in ' +  xbt_DATA.variables[
 
 #plot the profile index with time values
 # create the time label ticks
-from matplotlib.dates import MONTHLY, DateFormatter, rrulewrapper, RRuleLocator
 rule = rrulewrapper(MONTHLY, bymonthday=1, interval=1)
 formatter = DateFormatter('%d/%m/%y')
 loc = RRuleLocator(rule)
@@ -115,6 +113,6 @@ plot (tempCruise[:,profileToPlot],-depthCruise[:,profileToPlot])
 xlabel(TEMP.long_name +' in ' +TEMP.units)
 ylabel(DEPTH.long_name + ' in negative '  + DEPTH.units)
 
-title(metadata['title'] +   '\n Cruise  ' + cruiseToPlot + '-' + metadata['XBT_line_description']+ '\nlocation ' + "%0.2f" % latCruise[profileToPlot] + '/' + "%0.2f" % lonCruise[profileToPlot] + '\n' + timeCruise[profileToPlot].strftime('%d/%m/%Y'))
+title(xbt_DATA.title +   '\n Cruise  ' + cruiseToPlot + '-' + xbt_DATA.XBT_line_description+ '\nlocation ' + "%0.2f" % latCruise[profileToPlot] + '/' + "%0.2f" % lonCruise[profileToPlot] + '\n' + timeCruise[profileToPlot].strftime('%d/%m/%Y'))
 
-plt.show()
+show()
