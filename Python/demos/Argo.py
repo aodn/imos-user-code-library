@@ -10,17 +10,15 @@
 # Copyright 2013 IMOS
 # The script is distributed under the terms of the GNU General Public License
 
-from netCDF4 import Dataset
-from datetime import datetime, timedelta
-from pylab import * 
-import numpy
-import matplotlib.pyplot as plt    
-from imosNetCDF import *
+from numpy import unique, ones, array
+from netCDF4 import Dataset, num2date
+from matplotlib.pyplot import (figure, subplot, pcolor, xlabel, ylabel, 
+                               title, setp, show)
+from matplotlib.dates import MONTHLY, DateFormatter, rrulewrapper, RRuleLocator
 
 ############# Argo
 argo_URL = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/eMII/demos/Argo/aggregated_datasets/south_pacific/IMOS_Argo_TPS-20020101T000000_FV01_yearly-aggregation-South_Pacific_C-20121102T220000Z.nc' 
 argo_DATA = Dataset(argo_URL) 
-metadata = getAttNC(argo_DATA) 
 
 nProfData = len(argo_DATA.dimensions['N_PROF'])  #Number of profiles contained in the file.
 nLevelData = len(argo_DATA.dimensions['N_LEVELS'])  #Maximum number of pressure levels contained in a profile.
@@ -38,7 +36,8 @@ psalData =argo_DATA.variables['PSAL_ADJUSTED'][argoFloatProfilesIndexes]
 presData =argo_DATA.variables['PRES_ADJUSTED'][argoFloatProfilesIndexes]
 latProfile = argo_DATA.variables['LATITUDE'][argoFloatProfilesIndexes]
 lonProfile = argo_DATA.variables['LONGITUDE'][argoFloatProfilesIndexes]
-timeProfile = convertTime(argo_DATA.variables['JULD'])[argoFloatProfilesIndexes]
+JULD = argo_DATA.variables['JULD']
+timeProfile = num2date(JULD[argoFloatProfilesIndexes], JULD.units)
 
 # creation of a profile variable array
 nProfForFloat = sum(argoFloatProfilesIndexes == True)
@@ -56,10 +55,9 @@ cbar.ax.set_ylabel(argo_DATA.variables['TEMP_ADJUSTED'].long_name + '\n in ' + a
 xlabel('Profile Index')
 ylabel(argo_DATA.variables['PRES_ADJUSTED'].long_name + ' in negative ' + argo_DATA.variables['PRES_ADJUSTED'].units)
 
-title(metadata['description'] + '\nArgo Float Number : ' + "%0.0f" % argoFloatNumberChosen )
+title(argo_DATA.description + '\nArgo Float Number : ' + "%0.0f" % argoFloatNumberChosen )
 
 
-from matplotlib.dates import MONTHLY, DateFormatter, rrulewrapper, RRuleLocator
 rule = rrulewrapper(MONTHLY, bymonthday=1, interval=1)
 formatter = DateFormatter('%d/%m/%y')
 loc = RRuleLocator(rule)
@@ -99,8 +97,8 @@ ylabel('Profile Index')
 profileToPlot = 1# this is arbitrary. We can plot all profiles from 1 to nProfiles, modify profileToPlot if desired
 figure2 = figure(num=None, figsize=(7, 10), dpi=80, facecolor='w', edgecolor='k')
 plot (tempData[profileToPlot,:],-presData[profileToPlot,:])
-title(metadata['description'] + '\nlocation ' + "%0.2f" % latProfile[profileToPlot] + '/' + "%0.2f" % lonProfile[profileToPlot] + '\n' + timeProfile[profileToPlot].strftime('%d/%m/%Y'))
+title(argo_DATA.description + '\nlocation ' + "%0.2f" % latProfile[profileToPlot] + '/' + "%0.2f" % lonProfile[profileToPlot] + '\n' + timeProfile[profileToPlot].strftime('%d/%m/%Y'))
 xlabel(argo_DATA.variables['TEMP_ADJUSTED'].long_name +  ' in ' + argo_DATA.variables['TEMP_ADJUSTED'].units)
 ylabel(argo_DATA.variables['PRES_ADJUSTED'].long_name +  ' in negative ' + argo_DATA.variables['PRES_ADJUSTED'].units)
 
-plt.show()
+show()
