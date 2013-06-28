@@ -19,8 +19,7 @@ from matplotlib.pyplot import (figure, subplot, plot, xlabel, ylabel, title,
 from matplotlib.dates import MONTHLY, DateFormatter, rrulewrapper, RRuleLocator
 
 #### XBT
-# xbt_URL = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/eMII/demos/SOOP/SOOP-XBT/aggregated_datasets/line_and_year/IX1/IMOS_SOOP-XBT_T_20040131T195300Z_IX1_FV01_END-20041221T214400Z.nc'
-xbt_URL = '/home/mhidas/Downloads/IMOS_SOOP-XBT_T_20040131T195300Z_IX1_FV01_END-20041221T214400Z.nc'
+xbt_URL = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/eMII/demos/SOOP/SOOP-XBT/aggregated_datasets/line_and_year/IX1/IMOS_SOOP-XBT_T_20040131T195300Z_IX1_FV01_END-20041221T214400Z.nc'
 xbt_DATA = Dataset(xbt_URL) 
 
 qcFlag = 4 # flag value to eliminate (bad data)
