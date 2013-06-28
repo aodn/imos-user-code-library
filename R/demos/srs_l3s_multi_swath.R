@@ -18,7 +18,7 @@ library(ncdf4)
 source( '../commons/NetCDF/ncParse.R') #please modify if needed this line and point the path to the ncParse.R file downloaded from the IMOS User Code Library git repository
 
 ## Locate and parse a subset of a local NetCDF file
-file <- '/path/to/20130401152000-ABOM-L3S_GHRSST-SSTskin-AVHRR_D-1d_night-v02.0-fv01.0.nc'
+file <- 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/eMII/demos/SRS/SRS-SST/L3S-01day/L3S_1d_night/2013/20130401152000-ABOM-L3S_GHRSST-SSTskin-AVHRR_D-1d_night-v02.0-fv01.0.nc.gz'
 dataset <- ncParse( file, parserOption = 'all', variables = 'sea_surface_temperature') # Only harvest the sea surface temperature variable
 
 ## Load the raster and maps package
