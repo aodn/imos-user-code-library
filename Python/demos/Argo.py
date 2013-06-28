@@ -10,7 +10,7 @@
 # Copyright 2013 IMOS
 # The script is distributed under the terms of the GNU General Public License
 
-from numpy import unique, ones, array
+from numpy import unique, ones, arange
 from netCDF4 import Dataset, num2date
 from matplotlib.pyplot import (figure, subplot, pcolor, colorbar, xlabel, ylabel, 
                                title, plot, setp, show)
@@ -23,26 +23,32 @@ argo_DATA = Dataset(argo_URL)
 nProfData = len(argo_DATA.dimensions['N_PROF'])  #Number of profiles contained in the file.
 nLevelData = len(argo_DATA.dimensions['N_LEVELS'])  #Maximum number of pressure levels contained in a profile.
 
-# we list all the argo floats number in the variable 'argoFloatNumber' and
-#chose one value
-argoFloatNumber = unique(argo_DATA.variables['PLATFORM_NUMBER'][:])
+TEMP_ADJUSTED = argo_DATA.variables['TEMP_ADJUSTED']
+PRES_ADJUSTED = argo_DATA.variables['PRES_ADJUSTED']
+LATITUDE = argo_DATA.variables['LATITUDE']
+LONGITUDE = argo_DATA.variables['LONGITUDE']
+JULD = argo_DATA.variables['JULD']
 
-argoFloatNumberChosen = 5900106 # we randomly chose one float number
+# Get the Argo float number (ID) for each profile...
+profileFloatNumber = argo_DATA.variables['PLATFORM_NUMBER'][:]
+# ... then find the unique ones to see which floats are in this file
+uniqueFloatNumber = unique(profileFloatNumber)
+
+argoFloatNumberChosen = 5900106   # we randomly chose one float number
 # we load the data for this float
 
-argoFloatProfilesIndexes = argo_DATA.variables['PLATFORM_NUMBER'][:] == argoFloatNumberChosen 
-tempData = argo_DATA.variables['TEMP_ADJUSTED'][argoFloatProfilesIndexes]
-psalData =argo_DATA.variables['PSAL_ADJUSTED'][argoFloatProfilesIndexes]
-presData =argo_DATA.variables['PRES_ADJUSTED'][argoFloatProfilesIndexes]
-latProfile = argo_DATA.variables['LATITUDE'][argoFloatProfilesIndexes]
-lonProfile = argo_DATA.variables['LONGITUDE'][argoFloatProfilesIndexes]
-JULD = argo_DATA.variables['JULD']
+argoFloatProfilesIndexes = profileFloatNumber == argoFloatNumberChosen 
+tempData = TEMP_ADJUSTED[argoFloatProfilesIndexes,:]
+presData = PRES_ADJUSTED[argoFloatProfilesIndexes,:]
+latProfile = LATITUDE[argoFloatProfilesIndexes]
+lonProfile = LONGITUDE[argoFloatProfilesIndexes]
+# convert the time values into an array of datetime objects
 timeProfile = num2date(JULD[argoFloatProfilesIndexes], JULD.units)
 
 # creation of a profile variable array
-nProfForFloat = sum(argoFloatProfilesIndexes == True)
+nProfForFloat = sum(argoFloatProfilesIndexes)
 sizer = ones((1,nLevelData),'float') 
-profIndex = array(range(nProfForFloat))
+profIndex = arange(nProfForFloat)
 profIndex = profIndex.reshape(nProfForFloat,1) 
 prof_2D =  profIndex * sizer
 
@@ -51,26 +57,26 @@ figure1 = figure(num=None, figsize=(15, 10), dpi=80, facecolor='w', edgecolor='k
 subplot(311)
 pcolor(prof_2D, -presData, tempData)
 cbar = colorbar()
-cbar.ax.set_ylabel(argo_DATA.variables['TEMP_ADJUSTED'].long_name + '\n in ' + argo_DATA.variables['TEMP_ADJUSTED'].units)
+cbar.ax.set_ylabel(TEMP_ADJUSTED.long_name + '\n in ' + TEMP_ADJUSTED.units)
+
 xlabel('Profile Index')
-ylabel(argo_DATA.variables['PRES_ADJUSTED'].long_name + ' in negative ' + argo_DATA.variables['PRES_ADJUSTED'].units)
+ylabel(PRES_ADJUSTED.long_name + ' in negative ' + PRES_ADJUSTED.units)
+title(argo_DATA.description + '\nArgo Float Number : %d' % argoFloatNumberChosen )
 
-title(argo_DATA.description + '\nArgo Float Number : ' + "%0.0f" % argoFloatNumberChosen )
-
-
+# format labels on time axis (for plots below)
 rule = rrulewrapper(MONTHLY, bymonthday=1, interval=1)
 formatter = DateFormatter('%d/%m/%y')
 loc = RRuleLocator(rule)
 
-#plot the LON timeseries
+# plot the LON timeseries
 ax3 = subplot(234)
 plot(timeProfile,lonProfile)
 ax3.xaxis.set_major_locator(loc)
 ax3.xaxis.set_major_formatter(formatter)
 labels = ax3.get_xticklabels()
 setp(labels, rotation=30, fontsize=10)
-xlabel(argo_DATA.variables['JULD'].long_name  + ' in ' +  'dd/mm/yy' )
-ylabel(argo_DATA.variables['LONGITUDE'].long_name + ' in ' + argo_DATA.variables['LONGITUDE'].units)
+xlabel(JULD.long_name  + ' in dd/mm/yy' )
+ylabel(LONGITUDE.long_name + ' in ' + LONGITUDE.units)
 
 #plot the LAT timeseries
 ax4 = subplot(235)
@@ -79,8 +85,8 @@ ax4.xaxis.set_major_locator(loc)
 ax4.xaxis.set_major_formatter(formatter)
 labels = ax4.get_xticklabels()
 setp(labels, rotation=30, fontsize=10)
-xlabel(argo_DATA.variables['JULD'].long_name  + ' in ' +  'dd/mm/yy' )
-ylabel(argo_DATA.variables['LATITUDE'].long_name  + ' in ' +  argo_DATA.variables['LATITUDE'].units)
+xlabel(JULD.long_name  + ' in dd/mm/yy' )
+ylabel(LATITUDE.long_name  + ' in ' +  LATITUDE.units)
 
 #plot the profile index with time values
 ax5 = subplot(236)
@@ -89,16 +95,20 @@ ax5.xaxis.set_major_locator(loc)
 ax5.xaxis.set_major_formatter(formatter)
 labels = ax5.get_xticklabels()
 setp(labels, rotation=30, fontsize=10)
-xlabel(argo_DATA.variables['JULD'].long_name  + ' in ' +  'dd/mm/yy' )
+xlabel(JULD.long_name  + ' in dd/mm/yy' )
 ylabel('Profile Index')
 
 
-#plot of a single profile
-profileToPlot = 1# this is arbitrary. We can plot all profiles from 1 to nProfiles, modify profileToPlot if desired
-figure2 = figure(num=None, figsize=(7, 10), dpi=80, facecolor='w', edgecolor='k')
+# Plot of an arbitrary profile. Modify profileToPlot (between 0 and nProfiles-1) if desired.
+profileToPlot = 1
+figure2 = figure(num=None, figsize=(8, 10), dpi=80, facecolor='w', edgecolor='k')
 plot (tempData[profileToPlot,:],-presData[profileToPlot,:])
-title(argo_DATA.description + '\nlocation ' + "%0.2f" % latProfile[profileToPlot] + '/' + "%0.2f" % lonProfile[profileToPlot] + '\n' + timeProfile[profileToPlot].strftime('%d/%m/%Y'))
-xlabel(argo_DATA.variables['TEMP_ADJUSTED'].long_name +  ' in ' + argo_DATA.variables['TEMP_ADJUSTED'].units)
-ylabel(argo_DATA.variables['PRES_ADJUSTED'].long_name +  ' in negative ' + argo_DATA.variables['PRES_ADJUSTED'].units)
+
+title(argo_DATA.description + 
+      '\nlocation %0.2f / %0.2f\n' % (latProfile[profileToPlot], lonProfile[profileToPlot]) + 
+      timeProfile[profileToPlot].strftime('%d/%m/%Y'))
+
+xlabel(TEMP_ADJUSTED.long_name +  ' in ' + TEMP_ADJUSTED.units)
+ylabel(PRES_ADJUSTED.long_name +  ' in negative ' + PRES_ADJUSTED.units)
 
 show()
