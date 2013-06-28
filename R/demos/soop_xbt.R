@@ -14,7 +14,7 @@
 
 ## Load the ncdf4 package and NetCDF parser function
 library(ncdf4)
-# source( '/path/to/ncParse.R') #please uncomment this line and point the path to the ncParse.R file downloaded from the IMOS User Code Library git repository
+source( '../commons/NetCDF/ncParse.R') #please modify if needed this line and point the path to the ncParse.R file downloaded from the IMOS User Code Library git repository
 
 
 ## Locate and parse NetCDF file
