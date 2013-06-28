@@ -10,7 +10,6 @@
 # Copyright 2013 IMOS
 # The script is distributed under the terms of the GNU General Public License
 
-from numpy import where
 from netCDF4 import Dataset, num2date
 from matplotlib.pyplot import figure, subplot, plot, xlabel, ylabel, title, setp, show
 from matplotlib.dates import DAILY, DateFormatter, rrulewrapper, RRuleLocator
