@@ -19,23 +19,32 @@ from matplotlib.dates import DAILY, DateFormatter, rrulewrapper, RRuleLocator
 FAIMMS_URL = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/eMII/demos/FAIMMS/Myrmidon_Reef/Sensor_Float_1/water_temperature/sea_water_temperature@5.0m_channel_114/2012/QAQC/IMOS_FAIMMS_T_20121201T000000Z_FV01_END-20130101T000000Z_C-20130426T102459Z.nc' 
 faimms_DATA = Dataset(FAIMMS_URL) 
 
-qcLevel = 1 # only good data are being used
-
-TEMP = faimms_DATA.variables['TEMP'][:]
-TEMP_qcFlag = faimms_DATA.variables['TEMP_quality_control']
-index_qcLevel = where( TEMP_qcFlag[:,0,0] == qcLevel)
-
 TIME = faimms_DATA.variables['TIME']
-timeData = num2date(TIME, TIME.units)[index_qcLevel]
-tempData = TEMP[index_qcLevel[0][:],0,0]
+TEMP = faimms_DATA.variables['TEMP']
+TEMP_qcFlag = faimms_DATA.variables['TEMP_quality_control']
 
+# convert the time values into an array of datetime objects
+timeData = num2date(TIME[:], TIME.units)
+
+# Select only good data 
+qcLevel = 1 
+index_qcLevel = (TEMP_qcFlag[:,0,0] == qcLevel)
+timeData = timeData[index_qcLevel]
+tempData = TEMP[:,0,0]
+tempData = tempData[index_qcLevel]
+
+# plot temperature timeseries
 figure1 = figure(num=None, figsize=(15, 10), dpi=80, facecolor='w', edgecolor='k')
 ax1 = subplot(111)
-plot (timeData,tempData[:,])
+plot (timeData,tempData)
 
-title(faimms_DATA.title + '\n' + "%0.2f" % faimms_DATA.variables['TEMP'].sensor_depth + ' m depth' + '\nlocation:lat=' + "%0.2f" % faimms_DATA.variables['LATITUDE'][:] + '; lon=' + "%0.2f" % faimms_DATA.variables['LONGITUDE'][:] )
-xlabel( faimms_DATA.variables['TIME'].long_name)
-ylabel( faimms_DATA.variables['TEMP'].standard_name +' in ' + faimms_DATA.variables['TEMP'].units)
+title(faimms_DATA.title + '\n' +
+      '%0.2f m depth\n' % TEMP.sensor_depth +
+      'location: lat=%0.2f; lon=%0.2f' % (faimms_DATA.variables['LATITUDE'][:], 
+                                          faimms_DATA.variables['LONGITUDE'][:])
+      )
+xlabel(TIME.long_name)
+ylabel(TEMP.standard_name +' in ' + TEMP.units)
 
 rule = rrulewrapper(DAILY,  interval=1)
 formatter = DateFormatter('%d/%m/%y')
