@@ -10,23 +10,21 @@
 # Copyright 2013 IMOS
 # The script is distributed under the terms of the GNU General Public License
 
-from netCDF4 import Dataset
-from datetime import datetime, timedelta
-from pylab import * 
-import numpy
-import matplotlib.pyplot as plt    
-from imosNetCDF import *
+from netCDF4 import Dataset, num2date
+from numpy import meshgrid
+from matplotlib.pyplot import (figure, pcolor, colorbar, plot, xlabel, ylabel, 
+                               title, legend, show)
 
 ############# BioOptic absorption
 srs_absorption_URL = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/eMII/demos/SRS/BioOptical/1997_cruise-FR1097/absorption/IMOS_SRS-OC-BODBAW_X_19971201T052600Z_FR1097-absorption-CDOM_END-19971207T180500Z_C-20121129T130000Z.nc'
 srs_absorption = Dataset(srs_absorption_URL) 
-metadata = getAttNC(srs_absorption)
 
 nProfiles = len(srs_absorption.dimensions['profile'])
 # we choose the first profile
 ProfileToPlot = 9 # this is arbitrary. We can plot all profiles from 0 to nProfiles
 nObsProfile = srs_absorption.variables['rowSize'][ProfileToPlot] #number of observations for ProfileToPlot
-timeProfile = convertTime(srs_absorption.variables['TIME'])[ProfileToPlot]
+TIME = srs_absorption.variables['TIME']
+timeProfile = num2date(TIME[ProfileToPlot], TIME.units)  # convert time to a datetime object
 latProfile = srs_absorption.variables['LATITUDE'][ProfileToPlot]
 lonProfile = srs_absorption.variables['LONGITUDE'][ProfileToPlot]
 
@@ -48,7 +46,7 @@ cbar = colorbar()
 cbar.ax.set_ylabel(srs_absorption.variables['ag'].long_name + '\n in ' + srs_absorption.variables['ag'].units)
 
 
-title(metadata['source'])
+title(srs_absorption.source)
 xlabel( srs_absorption.variables['wavelength'].long_name + ' in: ' + srs_absorption.variables['wavelength'].units)
 ylabel(srs_absorption.variables['DEPTH'].long_name + ' in ' + srs_absorption.variables['DEPTH'].units + '; positive '+srs_absorption.variables['DEPTH'].positive )
 
@@ -58,15 +56,15 @@ nDepth = len(depthData)
 figure2 = figure(num=None, figsize=(15, 10), dpi=80, facecolor='w', edgecolor='k')
 
 labels = []
-for iplot in range(shape(agData)[0]):
+for iplot in range(agData.shape[0]):
     plot(wavelengthData[:],agData[iplot,:],'x')
     labels.append(r'Depth = %i m' % depthData[iplot])
     
-plt.legend(labels,loc='upper right')
+legend(labels,loc='upper right')
 
 ylabel(srs_absorption.variables['ag'].long_name + ' in: ' + srs_absorption.variables['ag'].units)
 xlabel( srs_absorption.variables['wavelength'].long_name + ' in: ' + srs_absorption.variables['wavelength'].units)
 
 title(srs_absorption.variables['ag'].long_name + 'in units:' + srs_absorption.variables['ag'].units + '\nstation :' +  '\nlocation:lat=' + "%0.2f" % latProfile + '; lon=' + "%0.2f" %lonProfile  + timeProfile.strftime('%d/%m/%Y') )
 
-plt.show()
+show()
