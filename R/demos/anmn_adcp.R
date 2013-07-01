@@ -41,10 +41,11 @@ dat1 <- data.frame( rep( date, each = length( depth)),c( rep( depth, length( dat
 colnames( dat1) <- c( 'x', 'y', 'z')
 
 ## Plot the eastward sea water velocity profiles and time series
-ggplot( data = dat1, aes( x = x, y = y)) +
+p <- ggplot( data = dat1, aes( x = x, y = y)) +
 geom_raster( aes( fill = z)) +
 scale_fill_gradient2( name = paste( ucurlab, ' ', '(', ucurunit, ')', sep = ''), limits = c( -1, 1), low = 'blue' , high = 'red', midpoint = 0, na.value = 'white')+
 theme( panel.background = element_rect( fill = 'white', colour = 'black'), panel.grid.major = element_blank())+
 labs( list( title = paste( title, '
 ', 'Lat / Lon = ', round( dataset$metadata$geospatial_lat_min, 1), ' / ', round( dataset$metadata$geospatial_lon_min, 1), '
 ', 'Start - End = ', dataset$metadata$time_coverage_start, ' - ', dataset$metadata$time_coverage_end, sep = ''), x = datelab, y = paste( depthlab, ' (', depthunit, ')', sep = '')))
+print(p)
