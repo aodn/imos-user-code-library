@@ -1,0 +1,25 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+
+ # config.vm.box_url = "http://grahamc.com/vagrant/ubuntu-12.04-omnibus-chef.box"
+ #config.vm.box = "ubuntu-12.04-omnibus-chef.box"
+
+  config.vm.box_url = "http://grahamc.com/vagrant/ubuntu-12.04.2-i386-chef-11-omnibus.box"
+ config.vm.box = "ubuntu-12.04.2-i386-chef-11-omnibus.box"
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+
+  config.ssh.forward_x11 = true
+  
+  config.vm.provision :chef_solo do |chef|
+
+    chef.add_recipe "apt::default"
+    chef.add_recipe "python"
+    chef.add_recipe "imos_python"
+    chef.add_recipe "r"
+    chef.add_recipe "imos_r"
+    chef.add_recipe "git"
+    chef.add_recipe "imos_user_code_library"
+  end
+end
