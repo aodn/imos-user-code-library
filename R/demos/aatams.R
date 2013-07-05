@@ -108,6 +108,7 @@ close.screen( all = TRUE)
 ## Plot the temperature and salinity profiles
 profile <- sample( seq(1, max( index)), 1) # Select a profile randomly
 
+dev.new()
 split.screen( c( 1, 2))
 screen( 1)
 plot( temp[which(( index) == profile)], -pres[which(( index) == profile)], xlab = paste( templab, ' ', '(', tempunit, ')', sep = ''), ylab = paste( preslab, ' (negative dbar)', sep = ''), type = 'b', pch = 19)
