@@ -85,10 +85,10 @@ function obj = imosAccumarray(obj,unitOfTime, varargin)
 % Set defaults:
 flagsToInclude = 0:10; 
 
-% Create a lookup table to map function to variable, default is nanmean
+% Create a lookup table to map function to variable, default is mean
 varFunMap = fieldnames(obj.variables);
 for i=1:length(varFunMap);
-  varFunMap{i,2} = 'nanmean';
+  varFunMap{i,2} = 'mean';
 end
 
 if ~isempty(varargin)
@@ -197,9 +197,9 @@ for i = 1:size(varFunMap,1)
     
     %build an inline function call for accumarray
      
-    inlineFun = ['@(x) {',fun,'(x)}'];
+    %inlineFun = ['@(x) {',fun,'(x)}'];
     
-    outputData = accumarray(idx,originalData,[],eval(inlineFun));
+    outputData = accumarray(idx,originalData,[],@(x) {executeFunction(x,fun)});
     outputData = cell2mat(outputData);
 
     %replace the original data in the structure
@@ -217,4 +217,17 @@ for i = 1:size(varFunMap,1)
         obj.variables.(var).flag = averagedQcFlags;
     end                                                
 end
-end             
+end
+
+function y = executeFunction(x,fun)
+  %The NaNs are necessary to keep the array structure, but
+  %we need to remove them before executing the function as they will
+  %cause functions such as mean to return NaN
+  x(isnan(x)) = [];
+  y = eval([fun,'(x)']);
+  if isempty(y)
+    y = single(NaN);
+  end
+end
+  
+
