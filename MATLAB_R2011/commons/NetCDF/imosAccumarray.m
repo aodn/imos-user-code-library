@@ -3,22 +3,9 @@ function obj = imosAccumarray(obj,unitOfTime, varargin)
 % data imported by ncParse.
 %
 % Elements from a data set are grouped by the input time interval 
-% and a function is applied to each group ('nanmean' by default).
+% and a function is applied to each group ('mean' by default).
 % This function can be used to compute bin averages and statistical 
 % summaries for a time series.
-%
-% TODO force use of nan median?
-% Data with Missing Values
-% nancov	Covariance ignoring NaN values
-% nanmax	Maximum ignoring NaN values
-% nanmean	Mean ignoring NaN values
-% nanmedian	Median ignoring NaN values
-% nanmin	Minimum ignoring NaN values
-% nanstd	Standard deviation ignoring NaN values
-% nansum	Sum ignoring NaN values
-% nanvar	Variance, ignoring NaN values
-%
-%
 %
 %Inputs: 
 %   obj             a structure created using ncParse
@@ -35,7 +22,7 @@ function obj = imosAccumarray(obj,unitOfTime, varargin)
 %         [fun]     any function can be used provided it accepts a vector and 
 %                   returns a scalar value. e.g. inbuilt functions 
 %                   'mean','mode','median','max','min','sum' etc. A user defined
-%                   function can also be used if in it's own file and known to 
+%                   function can also be used if in its own file and known to 
 %                   the matlab path. Default is mean.
 %        [vars]     optional cell array of variable names, if not present 'fun' 
 %                   will be applied to all variables. Vars must be specified 
@@ -72,13 +59,10 @@ function obj = imosAccumarray(obj,unitOfTime, varargin)
 % Author: Paul Rigby, AIMS/IMOS
 % email: p.rigby@aims.gov.au
 % Website: http://imos.org.au/
-% Sept 2013; Last revision: 3-Sep-2013
+% Oct 2013; 
 %
 % Copyright 2013 IMOS
 % The script is distributed under the terms of the GNU General Public License
-
-%TODO make sure this doesn't fall over with adcp files e.g. check for 1d
-%Could have more averaging options e.g. 6 monthly
 
 %% Deal with the optional input arguments
 
@@ -123,10 +107,6 @@ elseif length(varargin) > 1
   end
 end
 
-%debugging, delete me later
-disp(varFunMap)
-disp(flagsToInclude)
-
 %% TIME dimension
 % FIXME dimension can be time or TIME - make case insensitive?
 
@@ -151,7 +131,7 @@ tags = {'yearly','monthly','daily','hourly','minute','second'};
 
 %Find elements in the date vector that are unique up
 %until our chosen unit of time. 
-[uVec, ~, idx] = unique(D(:,1:Ti),'rows');
+[~, ~, idx] = unique(D(:,1:Ti),'rows');
 
 %compute a midpoint based upon the time range within each interval e.g. min + range/2
 intervalMidpoint = accumarray(idx,obj.dimensions.TIME.data,[],@(x) {min(x)+0.5*range(x)});
@@ -172,12 +152,9 @@ for i = 1:size(varFunMap,1)
         %others)
         flags = single(flags);
         qcAvailable = true;
-        disp(['QC flags found for variable ',var]);
         %get the index of flags that are not on our list
         flagsToDiscard = setdiff(flags,flagsToInclude);                  
-        badIndex = find(ismember(flags,flagsToDiscard));
-        fprintf('Data points discarded: %i \n',length(find(badIndex)));
-        fprintf('Total flags: %i \n',length(flags));        
+        badIndex = find(ismember(flags,flagsToDiscard));      
     catch e
         warning(['No QC flags found for variable',var]);
         qcAvailable = false;
@@ -194,10 +171,6 @@ for i = 1:size(varFunMap,1)
 
     %Mark as nan the data points with qc that we want to remove.
     originalData(badIndex) = NaN;
-    
-    %build an inline function call for accumarray
-     
-    %inlineFun = ['@(x) {',fun,'(x)}'];
     
     outputData = accumarray(idx,originalData,[],@(x) {executeFunction(x,fun)});
     outputData = cell2mat(outputData);
