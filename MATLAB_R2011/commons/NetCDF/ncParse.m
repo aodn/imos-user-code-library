@@ -512,8 +512,8 @@ end
 
 function cleanedDataset = cleanNetCDFValues(dataset)
 %%cleanNetCDFValues modifies the raw values from a NetCDF files according
-% to CF or IMOS attributes names, such as scale factors, valid_min and max
-% and Fillvalue. The dataset is afterwards ready to be used.
+% to CF or IMOS attributes names, such as scale factors and Fillvalue.
+% The dataset is afterwards ready to be used.
 %
 %
 % Syntax:  cleanedDataset = cleanNetCDFValues(dataset)
@@ -551,14 +551,6 @@ for iiVar=1:length(varnames)
     
     if isfield(dataset.variables.(varnames{iiVar}),'data')
         
-        if isfield(dataset.variables.(varnames{iiVar}),'valid_min')
-            cleanedDataset.variables.(varnames{iiVar}).data (dataset.variables.(varnames{iiVar}).data  <dataset.variables.(varnames{iiVar}).valid_min) = NaN;
-        end
-        
-        if isfield(dataset.variables.(varnames{iiVar}),'valid_max')
-            cleanedDataset.variables.(varnames{iiVar}).data(dataset.variables.(varnames{iiVar}).data > dataset.variables.(varnames{iiVar}).valid_max) = NaN;
-        end
-        
         if isfield(dataset.variables.(varnames{iiVar}),'FillValue')
             cleanedDataset.variables.(varnames{iiVar}).data(dataset.variables.(varnames{iiVar}).data  == dataset.variables.(varnames{iiVar}).FillValue) = NaN;
         end
@@ -580,15 +572,6 @@ dimensionsnames= fieldnames(dataset.dimensions);
 for iiDim=1:length(dimensionsnames)
     
     if isfield(dataset.dimensions.(dimensionsnames{iiDim}),'data')
-        
-        
-        if isfield(dataset.dimensions.(dimensionsnames{iiDim}),'valid_min')
-            cleanedDataset.dimensions.(dimensionsnames{iiDim}).data (dataset.dimensions.(dimensionsnames{iiDim}).data  <dataset.dimensions.(dimensionsnames{iiDim}).valid_min) = NaN;
-        end
-        
-        if isfield(dataset.dimensions.(dimensionsnames{iiDim}),'valid_max')
-            cleanedDataset.dimensions.(dimensionsnames{iiDim}).data(dataset.dimensions.(dimensionsnames{iiDim}).data > dataset.dimensions.(dimensionsnames{iiDim}).valid_max) = NaN;
-        end
         
         if isfield(dataset.dimensions.(dimensionsnames{iiDim}),'FillValue')
             cleanedDataset.dimensions.(dimensionsnames{iiDim}).data(dataset.dimensions.(dimensionsnames{iiDim}).data  == dataset.dimensions.(dimensionsnames{iiDim}).FillValue) = NaN;
