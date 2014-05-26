@@ -6,7 +6,7 @@
 % May 2013; Last revision: 20-May-2013
 %
 % Copyright 2013 IMOS
-% The script is distributed under the terms of the GNU General Public License
+% The script is distributed under the terms of the GNUv3 General Public License
 
 anmn_URL = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/eMII/demos/ANMN/WA/WATR50/Velocity/IMOS_ANMN-WA_VATPE_20120516T040000Z_WATR50_FV01_WATR50-1205-Workhorse-ADCP-498_END-20121204T021500Z_C-20121207T023956Z.nc' ;
 anmn_DATA = ncParse(anmn_URL) ;

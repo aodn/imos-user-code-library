@@ -6,7 +6,7 @@
 % May 2013; Last revision: 20-May-2013
 %
 % Copyright 2013 IMOS
-% The script is distributed under the terms of the GNU General Public License
+% The script is distributed under the terms of the GNUv3 General Public License
 
 FAIMMS_URL = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/eMII/demos/FAIMMS/Myrmidon_Reef/Sensor_Float_1/water_temperature/sea_water_temperature@5.0m_channel_114/2012/QAQC/IMOS_FAIMMS_T_20121201T000000Z_FV01_END-20130101T000000Z_C-20130426T102459Z.nc' ;
 faimms_DATA = ncParse(FAIMMS_URL) ;

@@ -51,7 +51,7 @@ function dataset = ncParse (inputFileName,varargin)
 % Jan 2013; Last revision: 22-Jan-2013
 %
 % Copyright 2013 IMOS
-% The script is distributed under the terms of the GNU General Public License
+% The script is distributed under the terms of the GNUv3 General Public License
 
 dataset=struct;
 
@@ -542,7 +542,7 @@ function cleanedDataset = cleanNetCDFValues(dataset)
 % Jan 2013; Last revision: 22-Jan-2013
 %
 % Copyright 2013 IMOS
-% The script is distributed under the terms of the GNU General Public License
+% The script is distributed under the terms of the GNUv3 General Public License
 
 cleanedDataset=dataset;
 varnames= fieldnames(dataset.variables);
@@ -628,7 +628,7 @@ function timeConverted =  convertTimeToMatlab (timeToConvert,units)
 % Jan 2013; Last revision: 22-Jan-2013
 %
 % Copyright 2013 IMOS
-% The script is distributed under the terms of the GNU General Public License
+% The script is distributed under the terms of the GNUv3 General Public License
 strOffset =units;
 indexNum = regexp(strOffset,'[^0-9]*(\d{4})-(\d{2})-(\d{2})[^0-9]*(\d{2})[^0-9]*(\d{2})[^0-9]*(\d{2})*','tokens');
 

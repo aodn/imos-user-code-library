@@ -6,7 +6,7 @@
 % May 2013; Last revision: 20-May-2013
 %
 % Copyright 2013 IMOS
-% The script is distributed under the terms of the GNU General Public License
+% The script is distributed under the terms of the GNUv3 General Public License
 
 srs_URL = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/eMII/demos/SRS/SRS-SST/L3P/2013/20130315-ABOM-L3P_GHRSST-SSTsubskin-AVHRR_MOSAIC_01km-AO_DAAC-v01-fv01_0.nc' ;
 srsL3P_DATA = ncParse(srs_URL) ; 

@@ -45,7 +45,7 @@ ncParse <- function( inputFileName, parserOption, variables){
 # Website: http://imos.org.au/  
 # Apr 2013; Last revision: 24-Apr-2013
 # Copyright 2013 IMOS
-# The script is distributed under the terms of the GNU General Public License
+# The script is distributed under the terms of the GNUv3 General Public License
 #
 # 
 # References

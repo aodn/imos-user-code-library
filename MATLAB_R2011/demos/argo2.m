@@ -6,7 +6,7 @@
 % May 2013; Last revision: 20-May-2013
 %
 % Copyright 2013 IMOS
-% The script is distributed under the terms of the GNU General Public License
+% The script is distributed under the terms of the GNUv3 General Public License
 
 argo_URL = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/eMII/demos/Argo/aggregated_datasets/south_pacific/IMOS_Argo_TPS-20020101T000000_FV01_yearly-aggregation-South_Pacific_C-20121102T220000Z.nc' ;
 argo_DATA = ncParse(argo_URL) ;

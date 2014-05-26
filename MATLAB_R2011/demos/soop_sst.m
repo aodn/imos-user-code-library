@@ -6,7 +6,7 @@
 % May 2013; Last revision: 20-May-2013
 %
 % Copyright 2013 IMOS
-% The script is distributed under the terms of the GNU General Public License
+% The script is distributed under the terms of the GNUv3 General Public License
 
 soop_sst_URL = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/eMII/demos/SOOP/SOOP-SST/VNSZ_Spirit-of-Tasmania-2/2013/IMOS_SOOP-SST_MT_20130511T000000Z_VNSZ_FV01_C-20130519T233008Z.nc';
 soop_sst_DATA = ncParse(soop_sst_URL) ;

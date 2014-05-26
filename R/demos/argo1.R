@@ -10,7 +10,7 @@
 # June 2013; Last revision: 13-June-2013
 #
 # Copyright 2013 IMOS
-# The script is distributed under the terms of the GNU General Public License
+# The script is distributed under the terms of the GNUv3 General Public License
 
 ## Load the ncdf4 package and NetCDF parser function
 library(ncdf4)

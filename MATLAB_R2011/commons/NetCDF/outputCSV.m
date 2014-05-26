@@ -54,7 +54,7 @@ function outputCSV(dataset, varargin)
 % Feb 2013; Last revision: 18-Feb-2013
 %
 % Copyright 2013 IMOS
-% The script is distributed under the terms of the GNU General Public License
+% The script is distributed under the terms of the GNUv3 General Public License
 
 
 if ~isstruct(dataset),          error('dataset must be a structure');        end
@@ -216,7 +216,7 @@ function converted = something2str(somethingToConvert)
 % Feb 2013; Last revision: 18-Feb-2013
 %
 % Copyright 2013 IMOS
-% The script is distributed under the terms of the GNU General Public License
+% The script is distributed under the terms of the GNUv3 General Public License
 
 if isnumeric(somethingToConvert)
     converted = mat2str(somethingToConvert);
@@ -256,7 +256,7 @@ function writeGlobAtt(dataset,filenameOutput)
 % Feb 2013; Last revision: 18-Feb-2013
 %
 % Copyright 2013 IMOS
-% The script is distributed under the terms of the GNU General Public License
+% The script is distributed under the terms of the GNUv3 General Public License
 fid = fopen(filenameOutput, 'a+');
 
 %% write global attributes
@@ -298,7 +298,7 @@ function outputCSV_1D (dataset,mainDimension,variableToExport_1D,folderOutput)
 % Feb 2013; Last revision: 18-Feb-2013
 %
 % Copyright 2013 IMOS
-% The script is distributed under the terms of the GNU General Public License
+% The script is distributed under the terms of the GNUv3 General Public License
 %% we create a new file per dimension type
 [~, nameNC, ~] = fileparts(dataset.metadata.netcdf_filename);
 filenameNC = [nameNC '_' mainDimension '_DimensionDependency.csv'];
