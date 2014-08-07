@@ -199,6 +199,9 @@ for ( v in 1:length( dimvarnames)){
 		}}
 
 }
-return( dataset)
+# you need to close the connection _before_ you return the dataset otherwise R's con stack gets full and crashes.
+# - Dirk Slawinski, 08/06/2014
+#return( dataset)
 if ( length( grep( "http", inputFileName)) == 1) nc_close( ncdf)
+return( dataset)
 }
