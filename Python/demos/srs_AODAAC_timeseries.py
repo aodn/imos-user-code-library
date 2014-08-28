@@ -27,15 +27,14 @@ def main():
 	try:
 		import numpy
 		from netCDF4 import Dataset, num2date
-		from matplotlib.pyplot import figure,  plot, xlabel, ylabel, title, setp, show
-		import matplotlib.pyplot
+		from matplotlib.pyplot import figure,  plot, xlabel, ylabel, title, show, subplot
 		import csv
 		from Tkinter import Tk
 		from tkFileDialog import askopenfilename
 		import os
 
 		
-			# Box Dialog to select an AODAAC file
+		# Box Dialog to select an AODAAC file
 		Tk().withdraw() # we don't want a full GUI, so keep the root window from appearing
 		if os.path.exists(os.path.expanduser('~/Downloads')):
 			srs_AODAAC_URL=askopenfilename(filetypes=[("NetCDF file","*.nc")], initialdir=(os.path.expanduser('~/Downloads')))
@@ -70,7 +69,7 @@ def main():
 		lon_min = lon[0]
 		lon_max = lon[-1]
 
-		print ('Latitude and longitude values to get a timseries plot at the wanted location') 
+		print ('Latitude and longitude values to get a timeseries plot at the wanted location') 
 
 		# Not checking if values entered by the user are numbers. We assume the user wants to make 
 		# this code run, and not try to kill it
@@ -127,22 +126,23 @@ def main():
 
 
 			# Plot of the timeseries
-			figure1 =  figure(num=None, figsize=(15, 10), dpi=80, facecolor='w', edgecolor='k')
-			plot (timeData,mainVar_values)
+			figure1 =  figure( num=None , figsize=(15, 10), dpi=80, facecolor='w', edgecolor='k')
+			ax1 = subplot(111)
+			ax1.plot (timeData,mainVar_values)
 
 			# Not all the AODAAC files have the same global attributes
 			try :
-				title(srs_AODAAC_DATA.title + '-' +  srs_AODAAC_DATA.DSD_entry_id)
+				ax1.title(srs_AODAAC_DATA.title + '-' +  srs_AODAAC_DATA.DSD_entry_id)
 			except :
 				pass
 
 			try :
-				xlabel(TIME.long_name )
+				ax1.xlabel(TIME.long_name )
 			except :
 				pass
 
 			try :
-				ylabel(mainVar.long_name +  ' in ' + mainVar.units)
+				ax1.ylabel(mainVar.long_name +  ' in ' + mainVar.units)
 			except :
 				pass
 
@@ -159,5 +159,5 @@ def main():
 
 if __name__ == '__main__':
 	main()
-	exit()
+
 
