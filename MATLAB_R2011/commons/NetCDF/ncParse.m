@@ -319,10 +319,10 @@ for iiVar=1:length(variablesToExport)
 %                end
 %                
 %                % finally we harvest only the indexes we need
-%                data =  nctoolbox_datasetInfo.data(variablesToExport(iiVar),firstIndex,lastIndex);
+%                data =  nctoolbox_datasetInfo.data(variablesToExport{iiVar},firstIndex,lastIndex);
 %                
 %            else
-                data =  (nctoolbox_datasetInfo.data(variablesToExport(iiVar)));
+                data =  (nctoolbox_datasetInfo.data(variablesToExport{iiVar}));
 %            end
             if isnumeric(data) && ~(strcmpi('time',variablesToExport{iiVar}) ...
                     || strcmpi('JULD',variablesToExport{iiVar}) ) % basically, if it's a normal dimension and not a time dimension, then we change the type from double to single
