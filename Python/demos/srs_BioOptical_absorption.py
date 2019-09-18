@@ -14,6 +14,7 @@ from netCDF4 import Dataset, num2date
 from numpy import meshgrid
 from matplotlib.pyplot import (figure, pcolor, colorbar, plot, xlabel, ylabel, 
                                title, legend, show)
+from six.moves import range
 
 ############# BioOptic absorption
 srs_absorption_URL = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/eMII/demos/SRS/BioOptical/1997_cruise-FR1097/absorption/IMOS_SRS-OC-BODBAW_X_19971201T052600Z_FR1097-absorption-CDOM_END-19971207T180500Z_C-20121129T130000Z.nc'
@@ -29,9 +30,9 @@ latProfile = srs_absorption.variables['LATITUDE'][ProfileToPlot]
 lonProfile = srs_absorption.variables['LONGITUDE'][ProfileToPlot]
 
 # we look for the observations indexes related to the choosen profile
-indexObservationStart = sum( srs_absorption.variables['rowSize'][range(0,ProfileToPlot)]) 
-indexObservationEnd = sum(srs_absorption.variables['rowSize'][range(0,ProfileToPlot+1)]) 
-indexObservation = range(indexObservationStart,indexObservationEnd  )
+indexObservationStart = sum( srs_absorption.variables['rowSize'][list(range(0,ProfileToPlot))]) 
+indexObservationEnd = sum(srs_absorption.variables['rowSize'][list(range(0,ProfileToPlot+1))]) 
+indexObservation = list(range(indexObservationStart,indexObservationEnd))
 
 agData = srs_absorption.variables['ag'][indexObservation,:]
 wavelengthData = srs_absorption.variables['wavelength']

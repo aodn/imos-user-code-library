@@ -15,6 +15,7 @@ from matplotlib.pyplot import (figure, subplot, pcolor, colorbar, title,
                                xlabel, ylabel, plot, setp, show)
 from matplotlib.dates import MONTHLY, DateFormatter, rrulewrapper, RRuleLocator
 from netCDF4 import Dataset, num2date
+from six.moves import range
 
 
 ## AATAMS - Animal Tagging and Monitoring
@@ -72,8 +73,8 @@ timeData = num2date(TIME[:], TIME.units)   # one value per profile
 # creation of a profile variable array
 sizer = numpy.ones((1,maxObsProfile),'float') 
 #observation = range(nProfiles)
-profIndex = numpy.array(range(nProfiles))
-profIndex = profIndex.reshape(nProfiles,1) 
+profIndex = numpy.array(list(range(nProfiles)))
+profIndex = profIndex.reshape(nProfiles, 1)
 prof_2D =  profIndex * sizer
 
 ## PLOT
@@ -94,7 +95,7 @@ loc = RRuleLocator(rule)
 
 #plot the LON timeseries
 ax3 = subplot(234)
-plot(timeData,lonProfile)
+plot(timeData, lonProfile)
 ax3.xaxis.set_major_locator(loc)
 ax3.xaxis.set_major_formatter(formatter)
 labels = ax3.get_xticklabels()
