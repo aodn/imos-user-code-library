@@ -13,6 +13,7 @@
 from netCDF4 import Dataset, num2date
 from numpy import meshgrid
 from matplotlib.pyplot import figure, plot, xlabel, ylabel, title, show
+from six.moves import range
 
 ############# BioOptic pigment
 srs_pigment_URL = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/eMII/demos/SRS/BioOptical/1997_cruise-FR1097/pigment/IMOS_SRS-OC-BODBAW_X_19971201T052600Z_FR1097-pigment_END-19971207T220700Z_C-20121129T120000Z.nc' 
@@ -28,15 +29,15 @@ latProfile = srs_pigment.variables['LATITUDE'][ProfileToPlot]
 lonProfile = srs_pigment.variables['LONGITUDE'][ProfileToPlot]
 
 # we look for the observations indexes related to the choosen profile
-indexObservationStart = sum( srs_pigment.variables['rowSize'][range(0,ProfileToPlot)]) 
-indexObservationEnd = sum(srs_pigment.variables['rowSize'][range(0,ProfileToPlot+1)]) 
-indexObservation = range(indexObservationStart,indexObservationEnd  )
+indexObservationStart = sum( srs_pigment.variables['rowSize'][list(range(0, ProfileToPlot))])
+indexObservationEnd = sum(srs_pigment.variables['rowSize'][list(range(0, ProfileToPlot+1))])
+indexObservation = list(range(indexObservationStart, indexObservationEnd))
 
 cphl_aData = srs_pigment.variables['CPHL_a'][indexObservation] # for ProfileToPlot
 depthData = srs_pigment.variables['DEPTH'][indexObservation]
 
 figure1 = figure(num=None, figsize=(15, 10), dpi=80, facecolor='w', edgecolor='k')
-plot (cphl_aData,depthData)
+plot (cphl_aData, depthData)
 
 title(srs_pigment.source +  timeProfile.strftime('%d/%m/%Y') + '\nlocation:lat=' + "%0.2f" % latProfile + '; lon=' + "%0.2f" %lonProfile )
 xlabel(srs_pigment.variables['CPHL_a'].long_name + ' in ' + srs_pigment.variables['CPHL_a'].units)

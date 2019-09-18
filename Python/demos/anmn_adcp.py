@@ -16,6 +16,7 @@ from matplotlib.pyplot import (figure, subplot, pcolor, clim, colorbar, title,
                                xlabel, ylabel, plot, setp, show)
 import matplotlib.colors as mcolors
 from matplotlib.dates import MONTHLY, DateFormatter, rrulewrapper, RRuleLocator
+from six.moves import range
 
 # open the dataset
 anmn_URL = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/eMII/demos/ANMN/WA/WATR50/Velocity/IMOS_ANMN-WA_VATPE_20120516T040000Z_WATR50_FV01_WATR50-1205-Workhorse-ADCP-498_END-20121204T021500Z_C-20121207T023956Z.nc' 
@@ -58,7 +59,7 @@ heightData_mesh, prof_2D_mesh = meshgrid(heightData, profIndex)
 
 
 # creation of a blue and red colormap centered in white
-levs = range(64)
+levs = list(range(64))
 assert len(levs) % 2 == 0, 'N levels must be even.'
 
 cmap = mcolors.LinearSegmentedColormap.from_list(name='red_white_blue', 

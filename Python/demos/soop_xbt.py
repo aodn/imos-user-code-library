@@ -17,6 +17,7 @@ from netCDF4 import Dataset, num2date
 from matplotlib.pyplot import (figure, subplot, plot, xlabel, ylabel, title, 
                                setp, show, pcolor, colorbar)
 from matplotlib.dates import MONTHLY, DateFormatter, rrulewrapper, RRuleLocator
+from six.moves import range
 
 #### XBT
 xbt_URL = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/eMII/demos/SOOP/SOOP-XBT/aggregated_datasets/line_and_year/IX1/IMOS_SOOP-XBT_T_20040131T195300Z_IX1_FV01_END-20041221T214400Z.nc'
@@ -62,7 +63,7 @@ depthCruise = ma.masked_values(depthCruise, xbt_DATA.variables['DEPTH']._FillVal
 # creation of a profile array to use it with pcolor. same dimension of temp and depth
 [nline, ncol] = shape(tempCruise)
 sizer = ones((nline,1),'float') 
-profileIndex = range(ncol)
+profileIndex = list(range(ncol))
 prof_2D =  sizer * profileIndex 
 
 ##### creation of the plots
