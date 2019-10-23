@@ -1,0 +1,286 @@
+---
+title: "Hourly TS aggregation: plot example"
+author: 'E. Klein'
+date: "2019-10-23"
+output: 
+  html_document:
+    toc:  TRUE
+    toc_float: TRUE
+    theme: united
+    highlight: tango
+    code_folding: hide
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r setup, cache = F, echo = F, message = F, warning = F, tidy = F}
+# make this an external chunk that can be included in any file
+require(knitr)
+options(width = 100, stringAsFactors=F)
+opts_chunk$set(echo =T, message = F, error = F, warning = F, comment = NA,  
+               fig.align = 'left',  fig.width = 7.5, fig.height = 6,
+               tidy = F, cache.path = '.cache/', fig.path = 'fig/')
+               
+library(RColorBrewer)
+palette(brewer.pal(8, "Set2"))
+
+library(kableExtra)
+library(ncdf4)
+library(ggplot2)
+library(dplyr)
+
+
+```
+
+Last run `r lubridate::now()`
+
+
+This document will present the IMOS Hourly aggregated times series product. It contains: 
+
+- Description of the product
+- sample plot of TEMP time series by depth range
+
+
+## Background
+
+
+IMOS support the Australian National Mooring Network, which is a facility that deploys and maintains moored oceanographic instruments all around Australia. The facility is independently run by five sub-facilities that are responsible for the QA/QC of the data. The data is stored in netCDF CF compliant files, one file per instrument per deployment per site. The files are accessible through [AODN THREDDS server](http://thredds.aodn.org.au/thredds/catalog/IMOS/catalog.html).
+
+## The Problem
+
+Depending on the user, some difficulties in accessing and processing the files could reduce the usability of the data: 
+
+- The data is scattered across multiple files
+- There are different levels of QC
+- netCDF files are not the prefered format for biologist
+
+So, to generate a long time series of for example, Temperature for one site, requires a relatively high level of expertise, collect many files from the server and concatenate it.
+
+IMOS has decided to invest in the generation of a more "user friendly" products in order to facilitate the usability of the data by non-expert users --> LTSP series
+
+- Aggregated time series: ONE variable from ALL instruments at ONE site
+- Hourly time series: ALL variables from ALL instruments at ONE site, binned to 1hr fixed interval
+- Gridded time series: ONE variable from ALL instruments at ONE sites binned to 1hr bins and 1m depth bins (more for the deep water moorings)
+
+## The Format
+
+To aggregate all instruments that has been deployed over the time at different depth requires a particular netCDF structure: [Indexed Ragged Array Representation](http://cfconventions.org/cf-conventions/v1.6.0/cf-conventions.html#_indexed_ragged_array_representation). 
+
+This representation breaks the standard "rectangular" structure that has TIME as a common dimension with another structure that is indexed by "INSTRUMENT" and has "OBSERVATION" as a common dimension. `TIME` is now a variable in the file.
+
+
+This format have some pros and cons:
+ 
+ PROS:
+ - all values from all deployments are in one single file.
+ 
+ 
+ CONS: 
+ - Not having `TIME` as a dimension require and understanding of the format and some "advanced" techniques to manipulate the data
+ 
+ 
+## The hourly product
+
+Basically, the process to generate an Hourly aggregated time series is as follow:
+1. Check the file for entry conditions: site_code, dates, depth, dimensions, etc
+2. Discard out of the water records
+3. Count QC flags -> indicator of the quality of the output
+4. For each variable, resample the values into 1hr bins
+    - Mean/median plus min, max, std, count
+5. Add metadata
+6. Save file
+
+You can have the documentation and the code visiting the [python-aodn tools repository](https://github.com/aodn/python-aodntools/tree/master/aodntools/timeseries_products)
+
+
+### The file structure
+
+As mentioned before, all the deployments with its particular `NOMINAL_DEPTH` are aggregated into a single file. When integrating several deployments, you need to consider the different depths, so it is not possible to produce a continuous time series over a common time line. Thats why the ragged array structure. 
+
+See for example this file from GBR Palm Passage(QLD). You can download the file directly from the THREDDS server:
+
+```{r opendata}
+file = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/ANMN/QLD/GBRPPS/hourly_timeseries/IMOS_ANMN-QLD_BOSTUZ_20071029_GBRPPS_FV02_hourly-timeseries-including-non-QC_END-20190524_C-20191010.nc'
+nc = nc_open(file)
+```
+
+the file contains all the variables recorded in this site, plus ancillary statistical variables that describe the binning process.
+
+```{r filestructure}
+## see the variables
+names(nc$var)
+
+names(nc$dim)
+```
+
+Note the dimensions: `INSTRUMENT`, `OBSERVATION`.
+
+`TIME` and `DEPTH` are variables
+
+Note the ancillary statistical variables associated to each Variable of Interest (VoI).
+
+In this particular example, the aggregated files contain quality controlled values *and* no QC values as well. In this case, an additional attribute (*percent_quality_controlled*)specifying the percent of QC values is included for each VoI.
+
+See that `TEMP` has been 100% QCed while `TURB` no:
+
+```{r varattrs}
+
+ncatt_get(nc, "TEMP", attname="percent_quality_controlled")
+
+ncatt_get(nc, "TURB", attname="percent_quality_controlled")
+```
+
+
+### Time series plot: RAW
+
+First we need to extrac the variable values and store it in a data frame. We're interested in `TIME`, `TEMP`, `DEPTH`, and `instrument_index`
+
+```{r makeDF}
+df = data.frame("TIME" = ncvar_get(nc, "TIME"), 
+                "TEMP" = ncvar_get(nc, "TEMP"),
+                "PSAL" = ncvar_get(nc, "PSAL"), 
+                "DEPTH"= ncvar_get(nc, "DEPTH"), 
+                "instrument_index" = ncvar_get(nc, "instrument_index"))
+
+head(df)
+
+```
+
+as `TIME` is load as number of days after 1950-01-01T00:00:00 (according to the `TIME` attributes and IMOS netCDf standards), it is necessary to convert it to a R datetime object:
+
+```{r convertTIME}
+df$TIME = as.POSIXct(df$TIME*60*60*24, origin = "1950-01-01T00:00:00")
+```
+
+
+
+If we plot `TEMP` along `TIME` variable, we will have all the instruments mixed together. remember that in one particular deployment is frequent to have more than one instrument moored at different depths.
+
+```{r plotRaw, fig.width=12, fig.height=6}
+
+plot(df$TIME, df$TEMP, ty="l", col="steelblue", xlab="", ylab="TEMP °C")
+
+```
+
+As `OBSERVATION` is the only dimension for `TEMP`, you need to work the variables as a grouped object.`xarray` and `pandas` work nicely with groups, although pandas could be more flexible and normally faster.
+
+In the file, each value has an associated variable called `instrument_index` that indicates the id of the instrument were the observation came from. In the data set, `INSTRUMENT` and `instrument_id` will allow you to make the link between the instrument index and the instrument description (name, model, serial number).
+
+But first, let's extract `TEMP`, `TIME` and `instrument_index` from the nc dataset to a pandas data frame (DF). 
+
+**NOTE**: the hourly aggregated time series files are normally large files. If you try to convert all the VoI and statistical ancillary variables into a pandas DF using a jupyter notebook, you will probably face memory problems. So try to work few variables at the same time.
+
+How many instruments are in the file?
+
+```{r nInstruments}
+print(length(unique(df$instrument_index)))
+```
+
+This file has 176 individual instruments, each of them with a registered `NOMINAL_DEPTH`.  
+
+If we plot the variable `TEMP` along the `TIME` variable we will have a plot in were each colour represents an individual deployment. For that we need to group the table by `instrument_index` (for now on, we will use ggplot2 library):
+
+```{r plotByInstrument, fig.width=12, fig.height=6}
+
+pp = ggplot(df, aes(TIME, TEMP, colour=factor(instrument_index)))
+pp + geom_point(size=0.2) + 
+  labs(x="", y="Temperature °C", subtitle = file) + 
+  theme_light(base_size = 12) + 
+  theme(legend.position="none")
+
+```
+
+
+Each colour represent one instrument deployed at one particular depth. 
+
+It may be interesting to group the nominal depth values to have long time series at that particular depth range. The `NOMINAL_DEPTH` is a coordinate with `INSTRUMENT` dimension, which in fact is the link to `instrument_index` variable. Let's explore `NOMINAL_DEPTH` extracting the values into another data frame (and name `INSTRUMENT` as `instrument_index` to join this table after with our first data frame)
+
+```{r getNomDepth}
+
+df_depth = data.frame("instrument_index" = unique(ncvar_get(nc, "instrument_index")),   ## as INSTRUMENT is a coordinate let get the value for instrument_index
+                      "NOMINAL_DEPTH" = ncvar_get(nc, "NOMINAL_DEPTH"))
+
+df_depth
+
+## we don't need the ncdf object anymore, so close it
+nc_close(nc)
+
+```
+
+
+### Plot by Depth range
+
+
+Suppose we decide to group the `NOMINAL_DEPTH` into 10m bins. for that we will create a new variable called `DEPTH_bin`:
+
+```{r cutDepth}
+df_depth$DEPTH_bin = cut(df_depth$NOMINAL_DEPTH, breaks = c(0, 10, 20, 30, 40, 50, 60, 70, 80))
+
+```
+
+and now join the data table with the depth table to have nominal depth and depth range with the values: 
+
+```{r joinDepth}
+
+df = left_join(df, df_depth)
+
+```
+
+we can now summarise the temperature by our newly depth range:
+
+```{r TEMPbydepth}
+
+TEMP.summary = df %>% group_by(DEPTH_bin) %>% 
+  summarise(nPoints = n(), 
+            Temp.mean = mean(TEMP, na.rm=T), 
+            TEMP.min = min(TEMP, na.rm=T),
+            TEMP.max = max(TEMP, na.rm=T), 
+            TEMP.sd = sd(TEMP, na.rm=T))
+
+kable(TEMP.summary) %>% kable_styling(bootstrap_options = c("striped", "hover"))
+
+
+```
+
+and the time series of temperature by depth range:
+
+```{r tempPlotDepth}
+
+pp = ggplot(df, aes(TIME, TEMP, colour=DEPTH_bin))
+pp + geom_point(size=0.2) + 
+  labs(x="", y="Temperature °C") + 
+  theme_light(base_size = 12) + 
+  theme(legend.position="none") + 
+  facet_grid(DEPTH_bin~.)
+
+```
+
+
+### Plot Temperature and Salinity
+
+In the same way, we can plot two variables as they are stored in the same file. We've already stored temperature and salinity in the data frame. Let's use the same depth range we've used for the temperature plot. Any empty plot indicates the absence of salinity register at that particular depth range:
+
+
+
+```{r tempsalPlotDepth}
+
+pp = ggplot(df, aes(PSAL, TEMP, colour=DEPTH_bin))
+pp + geom_point(size=0.2) + 
+  labs(x="Salinity", y="Temperature °C") + 
+  theme_light(base_size = 12) + 
+  theme(legend.position="none") + 
+  facet_grid(DEPTH_bin~.)
+
+```
+
+
+## Summary
+
+- the *Hourly Time Series Aggregated product* is available for each of the IMOS sites at [AODN THREDDS server  ](http://thredds.aodn.org.au/thredds/catalog/IMOS/catalog.html).
+- All variables measured in each of the sites are aggregated into one file with a common one-hour time interval and ancillary statistical variables for each time bin.
+- The aggregated file has a indexed ragged array structure, where the variable dimension is `OBSERVATION` and the source of the measurement is identified by the variable `instrument_index`.  
+- the `NOMINAL_DEPTH` of each instrument is stored in the file as a variable with `INSTRUMENT` dimension. This will allow to link the variable values through the link `instrument_index`= `INSTRUMENT`.  
+- It is possible to produce a long time series of any variables grouping the records by `instrument_index` which can be associated to the `NOMINAL_DEPTH` of the source instrument.
+
+
