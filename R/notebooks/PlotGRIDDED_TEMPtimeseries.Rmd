@@ -1,0 +1,167 @@
+---
+title: "Plot TEMP gridded product"
+author: 'E. Klein'
+date: "2019-01-20"
+output: 
+  html_document:
+    toc:  TRUE
+    toc_float: TRUE
+    theme: united
+    highlight: tango
+    code_folding: show
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r setup, cache = F, echo = F, message = F, warning = F, tidy = F}
+# make this an external chunk that can be included in any file
+require(knitr)
+options(width = 100, stringAsFactors=F)
+opts_chunk$set(echo =T, message = F, error = F, warning = F, comment = NA,  
+               fig.align = 'left',  fig.width = 7.5, fig.height = 6,
+               tidy = F, cache.path = '.cache/', fig.path = 'fig/')
+               
+library(RColorBrewer)
+palette(brewer.pal(8, "Set2"))
+library(kableExtra)
+library(ncdf4)
+library(ggplot2)
+library(dplyr)
+
+
+
+```
+
+Last run `r lubridate::now()`
+
+
+## Introduction
+
+This script will open a TEMP gridded timeseries product for AODN THREDDS server and plot the time series at target depths
+
+Note that the TEMP gridded product is a rectangular array with coordinates TIME and DEPTH, being TIME the hourly timestamps and DEPTH the target depths specific to any mooring site
+
+## Read data
+
+First we will read the data, extract the coordinates (`TIME`, `DEPTH`) and flatten the `TEMP` array into a 1D vector. this will easy the plot of the timeseries.
+
+It is recommended that you download the file to a local folder and then execute the code using the file. Downloading large amounts of data form the THREDDS server may cause some problems.
+
+```{r readdata}
+
+## this is from the AODN THREDDS server. Better to download the file to a local folder. 
+fileURL = "http://thredds.aodn.org.au/thredds/dodsC/IMOS/ANMN/NSW/PH100/gridded_timeseries/IMOS_ANMN-NSW_TZ_20091029_PH100_FV02_TEMP-gridded-timeseries_END-20190828_C-20200108.nc"
+
+nc = nc_open(fileURL)
+
+DEPTH = ncvar_get(nc, 'DEPTH')
+TIME = ncvar_get(nc, 'TIME')
+TEMP = ncvar_get(nc, 'TEMP')
+
+site_code = ncatt_get(nc, 0, "site_code")$value
+
+```
+
+
+Note that this particular file for `r site_code` site was produced interpolating temperature observations into `r length(DEPTH)` target depths:
+
+```{r depths}
+print(DEPTH)
+```
+
+We're interested in the `TEMP` variable. Note that this is a matrix of `r dim(TEMP)[1]` rows (corresponding to the target depths) and `r dim(TEMP)[2]` columns, correspondig to the hourly timestamps. In total the temperature matrix contains `r length(TEMP)` values. 
+
+## Flatten the TEMP matrix
+
+What we want is a data frame with `TEMP` aligned with its correpsonding `TIME` and `DEPTH`. To faltten the matrix we will use teh `as.vector` function, but this function works column-wise, so we need to transpose the matrix before flatten it.
+
+```{r flattenTEMP}
+
+## let's recycle the variables
+TEMP_long = as.vector(t(TEMP))
+print(length(TEMP_long))
+```
+
+Now, let's make the `DEPTH` and `TIME` vector that match the `TEMP` vector we've just created:
+
+For TIME, we need to repeat the time vector as many target depths (`r length(DEPTH)`) are in the file. Also we will convert the the resulting object as a POSIXct (date-time) object:
+
+```{r makeTIME}
+TIME_long = rep(TIME, length(DEPTH))
+head(TIME_long)
+# time is number of day after 1950-01-01. We need it in seconds
+TIME_long = as.POSIXct(TIME_long*24*60*60, origin='1950-01-01')
+head(TIME_long)
+```
+
+For depth, we need to loop over each depth and repeat the target depth to match the number of timestamps:
+
+```{r makeDEPTH}
+
+DEPTH_long = as.numeric()
+nTIMES = length(TIME)
+for (depth_index in 1:length(DEPTH)){
+  DEPTH_long = c(DEPTH_long, rep(DEPTH[depth_index], nTIMES))
+}
+
+```
+
+As we now have all the vectors aligned, let's build the data frame:
+
+```{r makeDataframe}
+df = data.frame(TIME=TIME_long, DEPTH=DEPTH_long, TEMP = TEMP_long)
+```
+
+## Calculate some statistics
+
+Let's explore the timeseries at each target depth
+
+```{r stats}
+
+TEMP_stats = df %>% group_by(DEPTH) %>% 
+  summarise(Temp.validN = sum(!is.na(TEMP)),
+            Temp.min = min(TEMP, na.rm=T),
+            Temp.q05 = quantile(TEMP, 0.05, na.rm=-T), 
+            Temp.q10 = quantile(TEMP, 0.05, na.rm=-T), 
+            Temp.q25 = quantile(TEMP, 0.05, na.rm=-T), 
+            Temp.q50 = quantile(TEMP, 0.05, na.rm=-T), 
+            Temp.q75 = quantile(TEMP, 0.05, na.rm=-T), 
+            Temp.q90 = quantile(TEMP, 0.05, na.rm=-T),
+            Temp.q95 = quantile(TEMP, 0.05, na.rm=-T),
+            Temp.max = max(TEMP, na.rm=-T), 
+            Temp.mad = mad(TEMP, na.rm=T), 
+            Temp.mean = mean(TEMP, na.rm=T), 
+            Temp.sd = sd(TEMP, na.rm=T))
+
+kable(TEMP_stats) %>%  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+
+## Make the plot
+
+We can now make the plot using `ggplot2` library
+
+### Data availability coloured by temperature
+
+```{r dataAvail, fig.height=8, fig.width=12}
+pp = ggplot(df, aes(TIME, DEPTH))
+pp + geom_point(size=0.2, aes(colour=TEMP)) + 
+  scale_color_viridis_c() + 
+  labs(subtitle = site_code) + 
+  scale_y_reverse() + 
+  theme_light()
+```
+
+### Time series at target depths
+
+```{r plotTEMP, fig.height=8, fig.width=12}
+
+pp = ggplot(df, aes(TIME, TEMP))
+pp + geom_point(size=0.1) + 
+  labs(subtitle = site_code) + 
+  facet_grid(DEPTH~.) + 
+  theme_light()
+
+```
+
