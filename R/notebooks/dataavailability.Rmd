@@ -49,29 +49,10 @@ df.delayed$has_chlorophyll[grepl("CPL", df.delayed$variables)] = TRUE
 ```
 
 
-```{r}
-# df = read_csv("/home/eklein/Proyectos/IMOS/LTSP/geoserverMoorings.csv")
-# 
-# ## use only delayed mode
-# df.delayed = df[df$data_mode=="delayed",]
-# 
-# ## modify has_chlorophyll based on variable content
-# df.delayed$has_chlorophyll[grepl("CHL", df.delayed$variables)] = TRUE
-# df.delayed$has_chlorophyll[grepl("CPL", df.delayed$variables)] = TRUE
-# 
-# df.delayed = df.delayed %>% filter(facility=="WA")
-# maxDate = lubridate::now()
-
-```
-
-
-
-
 Time series Variables
 =============================================
 
 ```{r}
-df.facility = df.delayed %>% filter(tolower(feature_type)=="timeseries")
 
 ###
 ## FILTER by facility, if not the dashboard is unreadable
@@ -79,6 +60,8 @@ df.facility = df.delayed %>% filter(tolower(feature_type)=="timeseries")
 select_facility = "NRS"
 df.delayed = df.delayed %>% filter(facility==select_facility)
 ###
+
+df.facility = df.delayed %>% filter(tolower(feature_type)=="timeseries")
 
 minDate = min(df.facility$time_coverage_start)
 maxDate = lubridate::now()
@@ -92,7 +75,7 @@ Row
 ### Facility
 
 ```{r}
-facility = df.delayed$facility[1]
+facility = df.facility$facility[1]
 valueBox(value = facility)
 ```
 
@@ -125,7 +108,7 @@ valueBox(value = as.Date(max(df.facility$time_deployment_start, na.rm=T)), color
 Row
 --------------------
 
-```{r, fig.width=18, fig.height=9, fig.align="center"}
+```{r, fig.width=18, fig.height=12, fig.align="center"}
 ## plot data availability: timeseries
 
 pp = ggplot()
