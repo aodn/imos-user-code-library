@@ -1,0 +1,611 @@
+---
+title: "Data Availability"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    vertical_layout: scroll
+
+---
+
+```{r setup, include=FALSE, echo=FALSE}
+# library(knitr)
+# opts_chunk$set(echo =F, message = F, error = F, warning = F, comment = NA,
+#                fig.align = 'center',  fig.width = 16,
+#                tidy = F, cache.path = '.cache/', fig.path = 'fig/')
+# options(width = 100, stringAsFactors=F, scipen=999)
+
+
+library(flexdashboard)
+
+library(stringr)
+library(ncdf4)
+library(dplyr)
+library(readr)
+library(lubridate)
+library(ggplot2)
+library(RColorBrewer)
+library(plotly)
+
+pal = brewer.pal(8, "Set2")
+```
+
+
+```{r}
+## get geoserver data. Delayed only
+url = "http://geoserver-123.aodn.org.au/geoserver/ows?typeName=moorings_all_map&SERVICE=WFS&REQUEST=GetFeature&VERSION=1.0.0&outputFormat=csv&CQL_FILTER=(realtime=FALSE)"
+
+df = readr::read_csv(url)
+
+## get facility
+df$facility = str_split(df$url, "/", simplify = T)[,3]
+
+## use only delayed mode
+df.delayed = df[df$data_mode=="delayed",]
+
+## modify has_chlorophyll based on variable content
+df.delayed$has_chlorophyll[grepl("CHL", df.delayed$variables)] = TRUE
+df.delayed$has_chlorophyll[grepl("CPL", df.delayed$variables)] = TRUE
+
+```
+
+
+```{r}
+# df = read_csv("/home/eklein/Proyectos/IMOS/LTSP/geoserverMoorings.csv")
+# 
+# ## use only delayed mode
+# df.delayed = df[df$data_mode=="delayed",]
+# 
+# ## modify has_chlorophyll based on variable content
+# df.delayed$has_chlorophyll[grepl("CHL", df.delayed$variables)] = TRUE
+# df.delayed$has_chlorophyll[grepl("CPL", df.delayed$variables)] = TRUE
+# 
+# df.delayed = df.delayed %>% filter(facility=="WA")
+# maxDate = lubridate::now()
+
+```
+
+
+
+
+Time series Variables
+=============================================
+
+```{r}
+df.facility = df.delayed %>% filter(tolower(feature_type)=="timeseries")
+
+###
+## FILTER by facility, if not the dashboard is unreadable
+
+select_facility = "NRS"
+df.delayed = df.delayed %>% filter(facility==select_facility)
+###
+
+minDate = min(df.facility$time_coverage_start)
+maxDate = lubridate::now()
+
+```
+
+
+Row
+-------------------------------------------
+
+### Facility
+
+```{r}
+facility = df.delayed$facility[1]
+valueBox(value = facility)
+```
+
+
+### Number of sites
+
+```{r}
+valueBox(value = length(unique(df.facility$site_code)))
+```
+
+### Number of deployments
+
+```{r}
+valueBox(value = nrow(df.facility))
+```
+
+### Earliest deployment
+
+```{r}
+valueBox(value = as.Date(minDate), color = "orange")
+```
+
+### Latest deployment
+
+```{r}
+valueBox(value = as.Date(max(df.facility$time_deployment_start, na.rm=T)), color="orange")
+```
+
+
+Row
+--------------------
+
+```{r, fig.width=18, fig.height=9, fig.align="center"}
+## plot data availability: timeseries
+
+pp = ggplot()
+pp = pp + geom_segment(data=subset(df.facility, grepl("TEMP", df.facility$variables)),
+                  aes(y=1, yend=1, x=time_coverage_start, xend=time_coverage_end, colour="Temp")) +
+  geom_segment(data=subset(df.facility, grepl("PSAL", df.facility$variables)),
+               aes(y=2, yend=2, x=time_coverage_start, xend=time_coverage_end, colour="Psal")) +
+  geom_segment(data=subset(df.facility, grepl("DEPTH", df.facility$variables)),
+               aes(y=3, yend=3, x=time_coverage_start, xend=time_coverage_end, colour="Depth")) +
+  geom_segment(data=subset(df.facility, grepl("DOX", df.facility$variables)),
+               aes(y=5, yend=5, x=time_coverage_start, xend=time_coverage_end, colour="Oxygen")) +
+  geom_segment(data=subset(df.facility, has_chlorophyll==TRUE),
+               aes(y=6, yend=6, x=time_coverage_start, xend=time_coverage_end, colour="Chlorophyll")) +
+  geom_rug(data=df.facility, aes(time_coverage_start), colour="grey30") + 
+  geom_vline(xintercept = as.POSIXct(seq(ymd(paste0(year(minDate),"-01-01")), ymd(paste0(year(maxDate),"-01-01")),  "year")), colour="gray30", linetype="dotted") + 
+  ylim(-2,7) + xlim(minDate, maxDate) + 
+  scale_colour_manual(name="", 
+                      values = c("Temp"=pal[1], "Psal"=pal[2], "Depth"=pal[3], "Oxygen"=pal[5], "Chlorophyll"=pal[6])) +  
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(), 
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.border = element_blank(), 
+        strip.text.y = element_text(angle = 0), 
+        legend.position = 'right') +
+    facet_grid(site_code~.)
+
+print(pp)
+
+```
+
+
+
+Temperature
+=============================================
+
+```{r}
+df.facility = df.delayed %>% filter(data_category=="Temperature")
+minDate = min(df.facility$time_coverage_start)
+```
+
+
+Row
+-------------------------------------------
+
+### Number of sites
+
+```{r}
+valueBox(value = length(unique(df.facility$site_code)))
+```
+
+### Number of deployments
+
+```{r}
+valueBox(value = nrow(df.facility))
+```
+
+### Earliest deployment
+
+```{r}
+valueBox(value = as.Date(minDate), color = "orange")
+```
+
+### Latest deployment
+
+```{r}
+valueBox(value = as.Date(max(df.facility$time_deployment_start)), color="orange")
+```
+
+
+
+Row
+--------------------
+
+```{r, fig.width=18, fig.height=9, fig.align="center"}
+
+
+pp = ggplot()
+pp + geom_segment(data=df.facility,
+               aes(y=1, yend=1, x=time_coverage_start, xend=time_coverage_end), colour=pal[1]) +
+    geom_rug(data=df.facility, aes(time_coverage_start), colour="grey30") + 
+  geom_vline(xintercept = as.POSIXct(seq(ymd(paste0(year(minDate),"-01-01")), ymd(paste0(year(maxDate),"-01-01")),  "year")), colour="gray30", linetype="dotted") + 
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(), 
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.border = element_blank(), 
+        strip.text.y = element_text(angle = 0), 
+        legend.position = 'top') +
+  facet_grid(site_code~.)
+
+```
+
+
+Salinity
+=============================================
+
+```{r}
+df.facility = df.delayed %>% filter(has_salinity==TRUE)
+minDate = min(df.facility$time_coverage_start)
+```
+
+
+Row
+-------------------------------------------
+
+### Number of sites
+
+```{r}
+valueBox(value = length(unique(df.facility$site_code)))
+```
+
+### Number of deployments
+
+```{r}
+valueBox(value = nrow(df.facility))
+```
+
+### Earliest deployment
+
+```{r}
+valueBox(value = as.Date(minDate), color = "orange")
+```
+
+### Latest deployment
+
+```{r}
+valueBox(value = as.Date(max(df.facility$time_deployment_start)), color="orange")
+```
+
+
+
+Row
+--------------------
+
+```{r, fig.width=18, fig.height=9, fig.align="center"}
+
+
+pp = ggplot()
+pp + geom_segment(data=df.facility,
+               aes(y=1, yend=1, x=time_coverage_start, xend=time_coverage_end), colour=pal[1]) +
+    geom_rug(data=df.facility, aes(time_coverage_start), colour="grey30") + 
+  geom_vline(xintercept = as.POSIXct(seq(ymd(paste0(year(minDate),"-01-01")), ymd(paste0(year(maxDate),"-01-01")),  "year")), colour="gray30", linetype="dotted") + 
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(), 
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.border = element_blank(), 
+        strip.text.y = element_text(angle = 0), 
+        legend.position = 'top') +
+  facet_grid(site_code~.)
+
+```
+
+
+Oxygen
+=============================================
+
+```{r}
+df.facility = df.delayed %>% filter(has_oxygen==TRUE)
+minDate = min(df.facility$time_coverage_start)
+```
+
+
+Row
+-------------------------------------------
+
+### Number of sites
+
+```{r}
+valueBox(value = length(unique(df.facility$site_code)))
+```
+
+### Number of deployments
+
+```{r}
+valueBox(value = nrow(df.facility))
+```
+
+### Earliest deployment
+
+```{r}
+valueBox(value = as.Date(minDate), color = "orange")
+```
+
+### Latest deployment
+
+```{r}
+valueBox(value = as.Date(max(df.facility$time_deployment_start)), color="orange")
+```
+
+
+
+Row
+--------------------
+
+```{r, fig.width=18, fig.height=9, fig.align="center"}
+
+
+pp = ggplot()
+pp + geom_segment(data=df.facility,
+               aes(y=1, yend=1, x=time_coverage_start, xend=time_coverage_end), colour=pal[1]) +
+    geom_rug(data=df.facility, aes(time_coverage_start), colour="grey30") + 
+  geom_vline(xintercept = as.POSIXct(seq(ymd(paste0(year(minDate),"-01-01")), ymd(paste0(year(maxDate),"-01-01")),  "year")), colour="gray30", linetype="dotted") + 
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(), 
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.border = element_blank(), 
+        strip.text.y = element_text(angle = 0), 
+        legend.position = 'top') +
+  facet_grid(site_code~.)
+
+```
+
+
+
+Chlorophyll
+=============================================
+
+```{r}
+df.facility = df.delayed %>% filter(has_chlorophyll==TRUE)
+minDate = min(df.facility$time_coverage_start)
+```
+
+
+Row
+-------------------------------------------
+
+### Number of sites
+
+```{r}
+valueBox(value = length(unique(df.facility$site_code)))
+```
+
+### Number of deployments
+
+```{r}
+valueBox(value = nrow(df.facility))
+```
+
+### Earliest deployment
+
+```{r}
+valueBox(value = as.Date(minDate), color = "orange")
+```
+
+### Latest deployment
+
+```{r}
+valueBox(value = as.Date(max(df.facility$time_deployment_start)), color="orange")
+```
+
+
+
+Row
+--------------------
+
+```{r, fig.width=18, fig.height=9, fig.align="center"}
+
+
+pp = ggplot()
+pp + geom_segment(data=df.facility,
+               aes(y=1, yend=1, x=min(time_coverage_start, na.rm=T), xend=max(time_coverage_end, na.rm=T)), colour=pal[1]) +
+    geom_rug(data=df.facility, aes(time_coverage_start), colour="grey30") + 
+  geom_vline(xintercept = as.POSIXct(seq(ymd(paste0(year(minDate),"-01-01")), ymd(paste0(year(maxDate),"-01-01")),  "year")), colour="gray30", linetype="dotted") + 
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(), 
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.border = element_blank(), 
+        strip.text.y = element_text(angle = 0), 
+        legend.position = 'top') +
+  facet_grid(site_code~.)
+
+```
+
+
+
+
+
+Velocity
+===================================
+
+```{r}
+df.facility = df.delayed %>% filter(data_category=="Velocity")
+minDate = min(df.facility$time_coverage_start)
+
+```
+
+
+Row
+-------------------------------------------
+
+### Number of sites
+
+```{r}
+valueBox(value = length(unique(df.facility$site_code)))
+```
+
+### Number of deployments
+
+```{r}
+valueBox(value = nrow(df.facility))
+```
+
+### Earliest deployment
+
+```{r}
+valueBox(value = as.Date(minDate), color = "orange")
+```
+
+### Latest deployment
+
+```{r}
+valueBox(value = as.Date(max(df.facility$time_deployment_start)), color="orange")
+```
+
+
+Row
+--------------------
+
+```{r, fig.width=18, fig.height=9, fig.align="center"}
+
+pp = ggplot()
+pp + geom_segment(data=df.facility,
+               aes(y=1, yend=1, x=time_coverage_start, xend=time_coverage_end), colour=pal[2]) +
+  geom_rug(data=df.facility, aes(time_coverage_start), colour="grey30") + 
+  geom_vline(xintercept = as.POSIXct(seq(ymd(paste0(year(minDate),"-01-01")), ymd(paste0(year(maxDate),"-01-01")),  "year")), colour="gray30", linetype="dotted") + 
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(), 
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.border = element_blank(), 
+        strip.text.y = element_text(angle = 0), 
+        legend.position = 'top') +
+  facet_grid(site_code~.)
+
+```
+
+
+Biogeochem TS
+========================================
+
+```{r}
+df.facility = df.delayed %>% filter(data_category=="Biogeochem_timeseries")
+minDate = min(df.facility$time_coverage_start)
+
+```
+
+Row
+-------------------------------------------
+
+### Number of sites
+
+```{r}
+valueBox(value = length(unique(df.facility$site_code)))
+```
+
+### Number of deployments
+
+```{r}
+valueBox(value = nrow(df.facility))
+```
+
+### Earliest deployment
+
+```{r}
+valueBox(value = as.Date(minDate), color = "orange")
+```
+
+### Latest deployment
+
+```{r}
+valueBox(value = as.Date(max(df.facility$time_deployment_start)), color="orange")
+```
+
+
+Row
+--------------------
+
+```{r, fig.width=18, fig.height=9, fig.align="center"}
+
+
+pp = ggplot()
+pp + geom_segment(data=df.facility,
+               aes(y=1, yend=1, x=time_coverage_start, xend=time_coverage_end), colour=pal[3]) +
+  geom_rug(data=df.facility, aes(time_coverage_start), colour="grey30") + 
+  geom_vline(xintercept = as.POSIXct(seq(ymd(paste0(year(minDate),"-01-01")), ymd(paste0(year(maxDate),"-01-01")),  "year")), colour="gray30", linetype="dotted") + 
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(), 
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.border = element_blank(), 
+        strip.text.y = element_text(angle = 0), 
+        legend.position = 'top') +
+  facet_grid(site_code~.)
+
+```
+
+
+CTD profiles
+=============================================
+
+```{r}
+df.facility = df.delayed %>% filter(feature_type=="profile")
+minDate = min(df.facility$time_coverage_start, na.rm=T)
+
+```
+
+
+Row
+-------------------------------------------
+
+### Number of sites
+
+```{r}
+valueBox(value = length(unique(df.facility$site_code)))
+```
+
+### Number of deployments
+
+```{r}
+valueBox(value = nrow(df.facility))
+```
+
+### Earliest deployment
+
+```{r}
+valueBox(value = as.Date(minDate), color = "orange")
+```
+
+### Latest deployment
+
+```{r}
+valueBox(value = as.Date(max(df.facility$time_deployment_start, na.rm=T)), color="orange")
+```
+
+
+Row
+--------------------
+
+
+```{r, fig.width=18, fig.height=9, fig.align="center"}
+
+
+if (nrow(df.facility)>0){
+  minDate = min(df.facility$time_coverage_start, na.rm=T)
+
+  pp = ggplot()
+  pp + geom_point(data=df.facility,
+                 aes(y=1, x=time_coverage_start), colour=pal[4]) +
+   geom_vline(xintercept = as.POSIXct(seq(ymd(paste0(year(minDate),"-01-01")), ymd(paste0(year(maxDate),"-01-01")),  "year")), colour="gray30", linetype="dotted") + 
+    theme(axis.title.y = element_blank(),
+          axis.title.x = element_blank(),
+          axis.text.y = element_blank(),
+          axis.ticks.y = element_blank(), 
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.border = element_blank(), 
+          strip.text.y = element_text(angle = 0), 
+          legend.position = 'top') +
+    facet_grid(site_code~.)
+}else {
+    valueBox("NO DATA")
+}
+
+```
+
