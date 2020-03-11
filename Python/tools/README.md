@@ -2,7 +2,7 @@
 
 ## geoserverCatalog
 
-This is a very handy tool that gives you the URLs of the AODN files according to various arguments. You can re-direct the output to a text file. To download the data files using the retrieved URLs and `wget` you can ask for the AODN Amazon S3 prefix (default, recommended) with the argument `-url S3` or the AODN THREDDS server prefix with `-url thredds`. To open the files directly from the AODN OPeNDAP server, you can ask for the opendap prefix with `-url opendap`. Remeber to exclude (`-exc`) or include (`-inc`) the new LTSP products (aggregated, hourly, gridded).
+This is a very handy tool that gives you the URLs of the AODN moorings facility files according to various arguments. You can re-direct the output to a text file. To download the data files using the retrieved URLs and `wget` you can ask for the AODN Amazon S3 prefix (default, recommended) with the argument `-url S3` or the AODN THREDDS server prefix with `-url thredds`. To open the files directly from the AODN OPeNDAP server, you can ask for the opendap prefix with `-url opendap`. Remeber to exclude (`-exc`) or include (`-inc`) the new LTSP products (aggregated, hourly, gridded).
 
 ```
 usage: geoserverCatalog.py [-h] [-var VARNAME] [-site SITE] [-ft FEATURETYPE]
