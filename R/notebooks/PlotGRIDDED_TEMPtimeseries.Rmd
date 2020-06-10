@@ -51,7 +51,7 @@ It is recommended that you download the file to a local folder and then execute 
 ```{r readdata}
 
 ## this is from the AODN THREDDS server. Better to download the file to a local folder. 
-fileURL = "http://thredds.aodn.org.au/thredds/dodsC/IMOS/ANMN/NSW/PH100/gridded_timeseries/IMOS_ANMN-NSW_TZ_20091029_PH100_FV02_TEMP-gridded-timeseries_END-20190828_C-20200108.nc"
+fileURL = "http://thredds.aodn.org.au/thredds/dodsC/IMOS/eMII/demos/timeseries_products/gridded_timeseries/IMOS_ANMN-NSW_TZ_20091029_PH100_FV02_TEMP-gridded-timeseries_END-20190828_C-20200108.nc"
 
 nc = nc_open(fileURL)
 

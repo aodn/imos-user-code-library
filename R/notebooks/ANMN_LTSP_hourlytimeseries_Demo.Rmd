@@ -101,7 +101,7 @@ As mentioned before, all the deployments with its particular `NOMINAL_DEPTH` are
 See for example this file from GBR Palm Passage(QLD). You can download the file directly from the THREDDS server:
 
 ```{r opendata}
-file = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/ANMN/QLD/GBRPPS/hourly_timeseries/IMOS_ANMN-QLD_BFOSTUZ_20071029_GBRPPS_FV02_hourly-timeseries-including-non-QC_END-20191120_C-20200523.nc'
+file = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/eMII/demos/timeseries_products/hourly_timeseries/IMOS_ANMN-QLD_BFOSTUZ_20071029_GBRPPS_FV02_hourly-timeseries-including-non-QC_END-20191120_C-20200523.nc'
 nc = nc_open(file)
 ```
 
