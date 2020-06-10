@@ -36,7 +36,7 @@ library(dplyr)
 Last run `r lubridate::now()`
 
 
-This document will present the IMOS Hourly aggregated times series product. It contains: 
+This document presents the IMOS Hourly aggregated times series product. It contains: 
 
 - Description of the product
 - sample plot of TEMP time series by depth range
@@ -53,7 +53,7 @@ Depending on the user, some difficulties in accessing and processing the files c
 
 - The data is scattered across multiple files
 - There are different levels of QC
-- netCDF files are not the prefered format for biologist
+- netCDF files are not the preferred format for biologist
 
 So, to generate a long time series of for example, Temperature for one site, requires a relatively high level of expertise, collect many files from the server and concatenate it.
 
@@ -96,12 +96,12 @@ You can have the documentation and the code visiting the [python-aodn tools repo
 
 ### The file structure
 
-As mentioned before, all the deployments with its particular `NOMINAL_DEPTH` are aggregated into a single file. When integrating several deployments, you need to consider the different depths, so it is not possible to produce a continuous time series over a common time line. Thats why the ragged array structure. 
+As mentioned before, all the deployments with its particular `NOMINAL_DEPTH` are aggregated into a single file. When integrating several deployments, you need to consider the different depths, so it is not possible to produce a continuous time series over a common time line. That is why the ragged array structure. 
 
 See for example this file from GBR Palm Passage(QLD). You can download the file directly from the THREDDS server:
 
 ```{r opendata}
-file = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/ANMN/QLD/GBRPPS/hourly_timeseries/IMOS_ANMN-QLD_BOSTUZ_20071029_GBRPPS_FV02_hourly-timeseries-including-non-QC_END-20190524_C-20191010.nc'
+file = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/ANMN/QLD/GBRPPS/hourly_timeseries/IMOS_ANMN-QLD_BFOSTUZ_20071029_GBRPPS_FV02_hourly-timeseries-including-non-QC_END-20191120_C-20200523.nc'
 nc = nc_open(file)
 ```
 
@@ -134,7 +134,7 @@ ncatt_get(nc, "TURB", attname="percent_quality_controlled")
 
 ### Time series plot: RAW
 
-First we need to extrac the variable values and store it in a data frame. We're interested in `TIME`, `TEMP`, `DEPTH`, and `instrument_index`
+First we need to extract the variable values and store it in a data frame. We're interested in `TIME`, `TEMP`, `DEPTH`, and `instrument_index`
 
 ```{r makeDF}
 df = data.frame("TIME" = ncvar_get(nc, "TIME"), 
@@ -159,7 +159,7 @@ If we plot `TEMP` along `TIME` variable, we will have all the instruments mixed 
 
 ```{r plotRaw, fig.width=12, fig.height=6}
 
-plot(df$TIME, df$TEMP, ty="l", col="steelblue", xlab="", ylab="TEMP 째C")
+plot(df$TIME, df$TEMP, ty="l", col="steelblue", xlab="", ylab="TEMP 캜")
 
 ```
 
@@ -185,7 +185,7 @@ If we plot the variable `TEMP` along the `TIME` variable we will have a plot in 
 
 pp = ggplot(df, aes(TIME, TEMP, colour=factor(instrument_index)))
 pp + geom_point(size=0.2) + 
-  labs(x="", y="Temperature 째C", subtitle = file) + 
+  labs(x="", y="Temperature 캜", subtitle = file) + 
   theme_light(base_size = 12) + 
   theme(legend.position="none")
 
@@ -249,7 +249,7 @@ and the time series of temperature by depth range:
 
 pp = ggplot(df, aes(TIME, TEMP, colour=DEPTH_bin))
 pp + geom_point(size=0.2) + 
-  labs(x="", y="Temperature 째C") + 
+  labs(x="", y="Temperature 캜") + 
   theme_light(base_size = 12) + 
   theme(legend.position="none") + 
   facet_grid(DEPTH_bin~.)
@@ -267,7 +267,7 @@ In the same way, we can plot two variables as they are stored in the same file. 
 
 pp = ggplot(df, aes(PSAL, TEMP, colour=DEPTH_bin))
 pp + geom_point(size=0.2) + 
-  labs(x="Salinity", y="Temperature 째C") + 
+  labs(x="Salinity", y="Temperature 캜") + 
   theme_light(base_size = 12) + 
   theme(legend.position="none") + 
   facet_grid(DEPTH_bin~.)

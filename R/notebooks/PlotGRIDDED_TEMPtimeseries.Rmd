@@ -70,11 +70,11 @@ Note that this particular file for `r site_code` site was produced interpolating
 print(DEPTH)
 ```
 
-We're interested in the `TEMP` variable. Note that this is a matrix of `r dim(TEMP)[1]` rows (corresponding to the target depths) and `r dim(TEMP)[2]` columns, correspondig to the hourly timestamps. In total the temperature matrix contains `r length(TEMP)` values. 
+We're interested in the `TEMP` variable. Note that this is a matrix of `r dim(TEMP)[1]` rows (corresponding to the target depths) and `r dim(TEMP)[2]` columns, corresponding to the hourly timestamps. In total the temperature matrix contains `r length(TEMP)` values. 
 
 ## Flatten the TEMP matrix
 
-What we want is a data frame with `TEMP` aligned with its correpsonding `TIME` and `DEPTH`. To faltten the matrix we will use teh `as.vector` function, but this function works column-wise, so we need to transpose the matrix before flatten it.
+What we want is a data frame with `TEMP` aligned with its corresponding `TIME` and `DEPTH`. To flatten the matrix we will use the `as.vector` function, but this function works column-wise, so we need to transpose the matrix before flatten it.
 
 ```{r flattenTEMP}
 
