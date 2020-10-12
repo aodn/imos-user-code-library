@@ -15,17 +15,17 @@ from netCDF4 import Dataset, num2date
 from matplotlib.pyplot import figure, subplot, plot, xlabel, ylabel, title, setp, show
 from matplotlib.dates import MONTHLY, DateFormatter, rrulewrapper, RRuleLocator
 
-############# ABOS
-abos_URL = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/eMII/demos/ABOS/SOTS/Pulse/IMOS_ABOS-SOTS_20110803T000000Z_PULSE_FV01_PULSE-8-2011_END-20120719T000000Z_C-20121009T214808Z.nc' 
-abos_DATA = Dataset(abos_URL) 
+############# DWM
+dwm_URL = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/eMII/demos/DWM/SOTS/Pulse/IMOS_DWM-SOTS_20110803T000000Z_PULSE_FV01_PULSE-8-2011_END-20120719T000000Z_C-20121009T214808Z.nc' 
+dwm_DATA = Dataset(dwm_URL) 
 
-tempDataStructure = abos_DATA.variables['TEMP_85_1']
-TIME = abos_DATA.variables['TIME']
+tempDataStructure = dwm_DATA.variables['TEMP_85_1']
+TIME = dwm_DATA.variables['TIME']
 
 tempData = tempDataStructure[:]
 timeData = num2date(TIME[:], TIME.units, TIME.calendar)
 
-print abos_DATA.abstract
+print dwm_DATA.abstract
 
 figure1 =figure( figsize=(10, 10), dpi=80, facecolor='w', edgecolor='k')
 ax = subplot(111)
@@ -36,7 +36,7 @@ plot(timeData[indexNoNan],tempData[indexNoNan])
 
 xlabel(TIME.long_name  + ' in ' +  'dd/mm/yy' )
 ylabel(tempDataStructure.standard_name + ' in ' + tempDataStructure.units)
-title(abos_DATA.title  + '\nat ' +  "%0.2f" %tempDataStructure.sensor_depth + ' m depth' )
+title(dwm_DATA.title  + '\nat ' +  "%0.2f" %tempDataStructure.sensor_depth + ' m depth' )
 
 # time ticks
 rule = rrulewrapper(MONTHLY, bymonthday=1, interval=1)
