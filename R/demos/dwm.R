@@ -1,4 +1,4 @@
-# Example to plot ABOS datasets
+# Example to plot DWM datasets
 #
 # Author: Xavier Hoenner, IMOS/eMII
 # email: xavier.hoenner@utas.edu.au
@@ -13,7 +13,7 @@ library(ncdf4)
 source( '../commons/NetCDF/ncParse.R') #please modify if needed this line and point the path to the ncParse.R file downloaded from the IMOS User Code Library git repository
 
 ## Locate and parse NetCDF file
-file_URL <- 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/eMII/demos/ABOS/SOTS/Pulse/IMOS_ABOS-SOTS_20110803T000000Z_PULSE_FV01_PULSE-8-2011_END-20120719T000000Z_C-20121009T214808Z.nc'
+file_URL <- 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/eMII/demos/DWM/SOTS/Pulse/IMOS_DWM-SOTS_20110803T000000Z_PULSE_FV01_PULSE-8-2011_END-20120719T000000Z_C-20121009T214808Z.nc'
 dataset <- ncParse( file_URL)
 
 ## Extract data from variables, dimensions, and metadata
