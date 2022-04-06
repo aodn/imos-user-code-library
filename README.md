@@ -1,5 +1,4 @@
-IMOS user code library
-==================
+# IMOS user code library
 
 IMOS (Integrated Marine Observing System, http://imos.org.au/) is designed to be a fully integrated national array of observing equipments monitoring the open oceans and coastal marine environment around Australia, covering physical, chemical and biological variables. All IMOS data is freely and openly available through the IMOS Ocean Portal for the benefit of Australian marine and climate science as a whole.
 
@@ -10,3 +9,6 @@ The purpose of the IMOS user code library is to provide a ready to go code solut
 
 Please visit the wiki page to see examples on how to use this User Code Library:
 https://github.com/aodn/imos-user-code-library/wiki
+
+## Licensing
+This project is licensed under the terms of the GNU GPLv3 license.
