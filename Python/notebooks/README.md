@@ -10,3 +10,4 @@ These are tools useful for handling, plotting and analysing IMOS-AODN data
 -  **XBT, Argo, Glider**. Acces AODN data via Geoserver. Query WMS/WFS to [find and plot datasets](https://github.com/B-Stepin/imos-user-code-library/blob/master/Python/notebooks/imos_geoserver_access.ipynb)
 -  **SAR Wind**. Acces AODN SAR data over THREDDS. [Open and visualise SAR wind datasets over Tasmania](https://github.com/B-Stepin/imos-user-code-library/blob/master/Python/notebooks/imos_ausar_winds.ipynb)
 -  **SAR Waves**. Acces AODN SAR data via THREDDS. [Open and visualise SAR Waves dataests under Western Australia](https://github.com/B-Stepin/imos-user-code-library/blob/master/Python/notebooks/imos_sar_waves.ipynb)
+-  **Climatology Data Product**. Visualise and extract climatology data from the NRS [through IMOS S3](https://github.com/B-Stepin/imos-user-code-library/blob/master/Python/notebooks/imos_climatology_data_product_via_s3.ipynb).
