@@ -5,3 +5,14 @@
 .settings
 target-eclipse
 *~
+Python/notebooks/.ipynb_checkpoints/imos_climatology_data_product_via_s3-checkpoint.ipynb
+Python/notebooks/.ipynb_checkpoints/imos_Library_Template-checkpoint.ipynb
+Python/notebooks/.ipynb_checkpoints/imos_moorings_gridded_thredds-checkpoint.ipynb
+Python/notebooks/.ipynb_checkpoints/imos_moorings_ltsp-checkpoint.ipynb
+Python/notebooks/.ipynb_checkpoints/imos_ocean_colour_via_s3-checkpoint.ipynb
+Python/notebooks/.ipynb_checkpoints/imos_radar_dm-checkpoint.ipynb
+Python/notebooks/.ipynb_checkpoints/imos_satellite_waves-checkpoint.ipynb
+Python/notebooks/.ipynb_checkpoints/imos_satellite_winds-checkpoint.ipynb
+Python/notebooks/.ipynb_checkpoints/imos_sstaars-checkpoint.ipynb
+Python/notebooks/.ipynb_checkpoints/imos_vessel_xbt_geoserver-checkpoint.ipynb
+Python/notebooks/.ipynb_checkpoints/README-checkpoint.md
