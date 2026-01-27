@@ -1,0 +1,14 @@
+[project]
+name = "nesp"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "jupytext>=1.19.1",
+    "notebook>=7.5.3",
+    "polars>=1.37.1",
+    "polars-h3>=0.6.1",
+    "polars-st>=0.4.3",
+    "pyarrow>=23.0.0",
+]
