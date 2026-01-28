@@ -7,3 +7,7 @@ target-eclipse
 *~
 Python/notebooks/.ipynb_checkpoints/
 
+nesp/*.html
+nesp/.ipynb_checkpoints
+nesp/__pycache__
+nesp/.venv
