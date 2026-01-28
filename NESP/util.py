@@ -1,4 +1,6 @@
 import matplotlib.pyplot
+import pyarrow
+import rich.table
 import typing
 
 def generate_color_mapping(
@@ -17,3 +19,34 @@ def generate_color_mapping(
     }
     
     return mapping
+
+def generate_schema_rich_table(
+    schema: pyarrow.Schema,
+    metadata_keys: list[str] = ["definition", "units"]
+) -> rich.table.Table:
+    
+    # Construct table
+    table = rich.table.Table()
+    table.add_column("name")
+    for metadata_key in metadata_keys:
+        table.add_column(metadata_key)
+
+    # Add the field name and definition rows
+    for field in schema:
+
+        # Add name
+        field_row = [
+            field.name,
+        ]
+
+        # Add additional metadata
+        for metadata_key in metadata_keys:
+            field_row.append(
+                field.metadata.get(metadata_key.encode(), b"").decode() 
+                if field.metadata 
+                else None
+            )
+        table.add_row(*field_row)
+        table.add_section()
+
+    return table
