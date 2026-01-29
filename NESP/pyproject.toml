@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "altair>=6.0.0",
     "matplotlib>=3.10.8",
     "notebook>=7.5.3",
     "pandas==2.3.3",
