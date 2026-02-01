@@ -1,9 +1,9 @@
 [project]
 name = "nesp"
 version = "0.1.0"
-description = "Add your description here"
+description = "Load and analyse NESP 5.9 Datasets"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.12"
 dependencies = [
     "altair>=6.0.0",
     "matplotlib>=3.10.8",
