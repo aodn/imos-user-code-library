@@ -1,5 +1,6 @@
 import matplotlib.pyplot
 import pyarrow
+import pyarrow.dataset
 import rich.table
 import typing
 
@@ -50,3 +51,17 @@ def generate_schema_rich_table(
         table.add_section()
 
     return table
+
+def estimate_dataset_size(
+    ds: pyarrow.dataset.Dataset,
+    n_samples: int = 1000,
+) -> int:
+    
+    # Take a sample
+    sample = ds.head(n_samples)
+
+    # Estaimate dataset size
+    avg_bytes_per_row = sample.nbytes / n_samples
+    estimated_bytes = avg_bytes_per_row * ds.count_rows()
+    estimated_megabytes = estimated_bytes * 2**-20
+    return estimated_megabytes
