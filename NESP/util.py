@@ -54,14 +54,15 @@ def generate_schema_rich_table(
 
 def estimate_dataset_size(
     ds: pyarrow.dataset.Dataset,
-    n_samples: int = 1000,
+    n_samples: int = 10_000,
 ) -> int:
     
     # Take a sample
-    sample = ds.head(n_samples)
+    n_rows = ds.count_rows()
+    sample= ds.head(min(n_samples, n_rows))
 
     # Estaimate dataset size
-    avg_bytes_per_row = sample.nbytes / n_samples
-    estimated_bytes = avg_bytes_per_row * ds.count_rows()
-    estimated_megabytes = estimated_bytes * 2**-20
+    avg_bytes_per_row = sample.nbytes / min(n_samples, n_rows)
+    estimated_bytes = avg_bytes_per_row * n_rows
+    estimated_megabytes = estimated_bytes / (2 ** 20)
     return estimated_megabytes
