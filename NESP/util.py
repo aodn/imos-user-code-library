@@ -30,7 +30,7 @@ TOOLTIP = {
 GLOBAL_VIEW_STATE = pydeck.ViewState(
     latitude=0,
     longitude=0,
-    zoom=0.5,
+    zoom=0.75,
     pitch=0,
     bearing=0,
 )
@@ -100,7 +100,6 @@ def generate_pydeck_hexagon_layers(
     hexagon_index_column_name: str = "h3Index",
     n_quantiles: int = N_QUANTILES,
     color_palette: COLOR_PALETTE_LITERAL = COLOR_PALETTE,
-    id: str | None = None,
 ) -> list[pydeck.Layer]:
     """
     Generate a list of pydeck H3HexagonLayer objects for visualizing hexagons.
@@ -143,7 +142,6 @@ def generate_pydeck_hexagon_layers(
             df.filter(
                 polars.col(color_index_column_name).eq(color_index),
             ).to_pandas(use_pyarrow_extension_array=True),
-            id=id,
             get_hexagon=hexagon_index_column_name,
             extruded=False,
             get_fill_color=fill_color,
