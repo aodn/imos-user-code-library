@@ -5,6 +5,7 @@ import rich.table
 import typing
 import polars
 import pydeck
+import pydeck.data_utils
 
 N_QUANTILES = 10
 COLOR_PALETTE = "plasma"
@@ -12,7 +13,7 @@ COLOR_PALETTE_LITERAL = typing.Literal["viridis", "plasma", "inferno", "magma", 
 TOOLTIP = {
     "html": """
         <div style="font-family: 'Helvetica Neue', Arial, sans-serif; padding: 10px;">
-            <b style="font-size: 1.2em;">H3 Cell:</b> <code>{h3_cell}</code><br/>
+            <b style="font-size: 1.2em;">H3 Index:</b> <code>{h3Index}</code><br/>
             <hr style="margin: 5px 0; border: 0; border-top: 1px solid #ccc;">
             <b>Records:</b> {n_records}<br/>
             <b>Datasets:</b> {datasets}
@@ -26,6 +27,13 @@ TOOLTIP = {
         "zIndex": "1000"
     }
 }
+GLOBAL_VIEW_STATE = pydeck.ViewState(
+    latitude=0,
+    longitude=0,
+    zoom=0.5,
+    pitch=0,
+    bearing=0,
+)
 
 
 def generate_color_mapping(
@@ -186,6 +194,34 @@ def generate_schema_rich_table(
         table.add_section()
 
     return table
+
+def generate_view_state(
+    df: polars.DataFrame,
+    view_proportion: float = 1.0,
+    longitude_column_name: str = "decimalLongitude",
+    latitude_column_name: str = "decimalLatitude",
+) -> pydeck.ViewState:
+    """
+    Compute a pydeck ViewState centered and zoomed to fit the data points.
+
+    :param df: Input polars DataFrame containing longitude and latitude columns.
+    :type df: polars.DataFrame
+    :param view_proportion: Proportion of the view to use for fitting points (0.0-1.0).
+    :type view_proportion: float
+    :param longitude_column_name: Name of the longitude column.
+    :type longitude_column_name: str
+    :param latitude_column_name: Name of the latitude column.
+    :type latitude_column_name: str
+    :return: Computed pydeck ViewState object.
+    :rtype: pydeck.ViewState
+    """
+    return pydeck.data_utils.compute_view(
+        points=df.select(
+            polars.col(longitude_column_name),
+            polars.col(latitude_column_name),
+        ).to_numpy(),
+        view_proportion=view_proportion,
+    )
 
 def estimate_dataset_size(
     ds: pyarrow.dataset.Dataset,
