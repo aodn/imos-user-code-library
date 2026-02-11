@@ -1,3 +1,12 @@
+"""
+Utility functions for NESP data processing and visualization.
+
+This module provides helper functions for:
+- Generating color mappings and hexbin visualizations using pydeck
+- Creating rich tables for schema display
+- Estimating pyarrow dataset sizes
+- Generating PyDeck Artifacts
+"""
 import matplotlib.pyplot
 import pyarrow
 import pyarrow.dataset
@@ -93,7 +102,6 @@ def generate_color_index_series(
         allow_duplicates=True,
     ).cast(polars.String)
 
-
 def generate_pydeck_hexagon_layers(
     df: polars.DataFrame,
     aggregate_column_name: str,
@@ -114,8 +122,6 @@ def generate_pydeck_hexagon_layers(
     :type n_quantiles: int
     :param color_palette: Name of the matplotlib color palette.
     :type color_palette: COLOR_PALETTE_LITERAL
-    :param id: Optional layer ID.
-    :type id: str or None
     :return: List of pydeck Layer objects.
     :rtype: list[pydeck.Layer]
     """
@@ -240,7 +246,7 @@ def estimate_dataset_size(
     n_rows = ds.count_rows()
     sample= ds.head(min(n_samples, n_rows))
 
-    # Estaimate dataset size
+    # Estimate dataset size
     avg_bytes_per_row = sample.nbytes / min(n_samples, n_rows)
     estimated_bytes = avg_bytes_per_row * n_rows
     estimated_megabytes = estimated_bytes / (2 ** 20)
