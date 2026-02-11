@@ -15,6 +15,7 @@ dependencies = [
     "pyarrow>=23.0.0",
     "pydeck>=0.9.1",
     "rich>=14.3.1",
+    "seaborn>=0.13.2",
 ]
 
 [dependency-groups]
