@@ -259,7 +259,7 @@ def estimate_dataset_size(
     return estimated_megabytes
 
 
-def generate_geometry_table_from_shapefile(path: pathlib.Path) -> polars_st.GeoDataFrame:
+def generate_geodataframe_from_shapefile(path: pathlib.Path) -> geopandas.GeoDataFrame:
 
     # Unzip into a temporary directory
     with tempfile.TemporaryDirectory() as temporary_directory:
@@ -277,7 +277,7 @@ def generate_geometry_table_from_shapefile(path: pathlib.Path) -> polars_st.GeoD
         if gdf.crs is None or gdf.crs.to_epsg() != 4326:
             gdf = gdf.to_crs("EPSG:4326")
 
-        return polars_st.GeoDataFrame(pyarrow.table(gdf.to_arrow()))
+        return gdf
 
 def generate_wkt_to_h3_index(
     gdf: polars_st.GeoDataFrame,
