@@ -15,6 +15,12 @@ import typing
 import polars
 import pydeck
 import pydeck.data_utils
+import tempfile
+import pathlib
+import zipfile
+import geopandas
+import h3
+import polars_st
 
 N_QUANTILES = 10
 COLOR_PALETTE = "plasma"
@@ -252,3 +258,83 @@ def estimate_dataset_size(
     estimated_megabytes = estimated_bytes / (2 ** 20)
     return estimated_megabytes
 
+
+def generate_geometry_table_from_shapefile(path: pathlib.Path) -> polars_st.GeoDataFrame:
+
+    # Unzip into a temporary directory
+    with tempfile.TemporaryDirectory() as temporary_directory:
+        # Unzip the path
+        with zipfile.ZipFile(path, 'r') as zip_ref:
+            zip_ref.extractall(temporary_directory)
+
+        # Read the shape file
+        gdf = geopandas.read_file(
+            temporary_directory,
+            engine="pyogrio",
+        )
+
+        # Check and translate to 4326
+        if gdf.crs is None or gdf.crs.to_epsg() != 4326:
+            gdf = gdf.to_crs("EPSG:4326")
+
+        return polars_st.GeoDataFrame(pyarrow.table(gdf.to_arrow()))
+
+def generate_wkt_to_h3_index(
+    gdf: polars_st.GeoDataFrame,
+    h3_resolution: int = 5,
+    tag_column_name: str = "tag",
+) -> polars.DataFrame:
+    """
+    Convert geometries in a GeoDataFrame to H3 hexagon indices and aggregate by tags.
+
+    This function takes a GeoDataFrame containing geometries, converts each geometry
+    to H3 hexagon indices at the specified resolution, and groups the results by
+    H3 index while aggregating associated tags.
+
+    :param gdf: Input GeoDataFrame containing geometries and tag information.
+    :type gdf: polars_st.GeoDataFrame
+    :param h3_resolution: H3 resolution level for hexagon indexing (0-15).
+    :type h3_resolution: int
+    :param tag_column_name: Name of the column containing tags to aggregate.
+    :type tag_column_name: str
+    :return: DataFrame with H3 indices, aggregated tags, and tag counts.
+    :rtype: polars.DataFrame
+    """
+    return (
+        gdf
+        .with_columns(
+            # Get h3 shapes per wkt
+            # Produces list[h3_index]
+            polars_st.geom().st.to_dict().map_elements(
+                function=lambda geo_interface: h3.h3shape_to_cells_experimental(
+                    h3shape=h3.geo_to_h3shape(geo_interface),
+                    res=h3_resolution,
+                    contain="overlap",
+                ),
+                return_dtype=polars.List(polars.String)
+            ).alias("h3Index"),
+            # Add h3 resolution scalar
+            polars.lit(h3_resolution).cast(polars.Int8).alias("h3_resolution"),
+        )
+        # Drop no longer required geometry
+        .drop(
+            polars_st.geom(),
+        )
+        # Generate record per geometry h3 indexes
+        .explode(
+            polars.col("h3Index"),
+        )
+        # Group by the location
+        .group_by(
+            polars.col("h3_resolution"),
+            polars.col("h3Index")
+        ).agg(
+            polars.col(tag_column_name).alias("tags"),
+        ).with_columns(
+            # Aggregate tags to a representable string
+            polars.col("tags").list.join("|"),
+            polars.col("tags").list.len().alias("n_tags"),
+        ).sort(
+            polars.col("tags"),
+        )
+    )
