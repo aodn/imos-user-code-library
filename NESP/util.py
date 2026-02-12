@@ -155,6 +155,7 @@ def generate_pydeck_hexagon_layers(
                 polars.col(color_index_column_name).eq(color_index),
             ).to_pandas(use_pyarrow_extension_array=True),
             get_hexagon=hexagon_index_column_name,
+            auto_highlight=True,
             extruded=False,
             get_fill_color=fill_color,
             get_line_color=fill_color[:3],
