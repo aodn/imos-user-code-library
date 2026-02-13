@@ -10,6 +10,7 @@ This module provides helper functions for:
 import matplotlib.pyplot
 import pyarrow
 import pyarrow.dataset
+import rich.console
 import rich.table
 import typing
 import polars
@@ -165,10 +166,10 @@ def generate_pydeck_hexagon_layers(
         for color_index, fill_color in color_mapping.items()
     ]
 
-def generate_schema_rich_table(
+def print_schema_rich_table(
     schema: pyarrow.Schema,
     metadata_keys: list[str] = ["definition", "units"]
-) -> rich.table.Table:
+) -> None:
     """
     Generate a rich Table displaying schema field names and metadata.
 
@@ -204,7 +205,7 @@ def generate_schema_rich_table(
         table.add_row(*field_row)
         table.add_section()
 
-    return table
+    rich.console.Console().print(table)
 
 def generate_view_state(
     df: polars.DataFrame,
