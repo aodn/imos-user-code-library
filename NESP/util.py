@@ -184,6 +184,7 @@ def print_schema_rich_table(
     # Construct table
     table = rich.table.Table()
     table.add_column("name")
+    table.add_column("type")
     for metadata_key in metadata_keys:
         table.add_column(metadata_key)
 
@@ -193,6 +194,7 @@ def print_schema_rich_table(
         # Add name
         field_row = [
             field.name,
+            str(field.type),
         ]
 
         # Add additional metadata
