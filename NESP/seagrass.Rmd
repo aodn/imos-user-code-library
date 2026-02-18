@@ -1,0 +1,319 @@
+---
+title: "Seagrass R Notebook"
+author: "Thomas Galindo, Denisse Fierro Arcos"
+date: "2026-02-10"
+output: 
+  github_document:
+    toc: true
+    html_preview: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.path = "NESP/figures/")
+```
+
+# Background
+This R notebook outlines the packages needed to access and analyse NESP Data Products, as well as how to check their content structure. This notebook was originally written in Python by Thomas Galindo. It was "translated" into R by Denisse Fierro Arcos. It should be noted that although both notebooks cover the same topic, the content may vary between these notebooks as features may not be available in both Python and R.  
+  
+This notebook includes the following sections:  
+- [Relevant R packages needed to access NESP Data Products](#relevant-packages)
+- [How to access NESP Data Products](#accessing-nesp-datasets)
+- [How aggregate and map NESP datasets using the H3 package](#data-aggregation-and-mapping-with-h3)
+- [Identifying suitable sampling sites where trend analysis can be carried out](#identifying-suitable-trend-sites)
+
+
+## Relevant packages
+
+```{r packages}
+library(arrow)
+library(h3)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(ggplot2)
+```
+
+## Accessing NESP datasets
+NESP 5.9 datasets can be accessed via the `arrow` package for R. First, we will need to create a connection with the parent folder containing NESP data as follows:  
+
+```{r}
+conn <- s3_bucket("s3://data-uplift-public/", anonymous = TRUE, 
+                  region = "ap-southeast-2")
+```
+  
+Once a connection has been established, then we can select a specific dataset that interest us. In this case, we will be accessing a dataset about seagrasses. By using the `open_dataset` function from `arrow` we can load either the dataset on its entirety or a subset.
+
+```{r}
+url <- "s3://data-uplift-public/stored/datauplift/seagrass/seagrass.parquet"
+ds <- open_dataset(sources = url, filesystem = conn)
+ds
+```
+
+The seagrasses dataset is partitioned (i.e., separated into parquet fragments), but it is really a single file. We can check the number of files included in a dataset as follows:  
+
+```{r}
+ds$files
+```
+
+We can also check the file structure (i.e., schema) of the seagrass dataset. This will give us the name of the columns contained in the dataset, which can help us filter the data before accessing.  
+
+```{r}
+ds$schema
+```
+
+From here, we can see there are 21 columns, but we can check how many records in total are included in the dataset as follows:  
+
+```{r}
+dim(ds)
+```
+
+This dataset has over 3 million records, which may be too much for some computer to handle, so next we will show how to load a dataset in full and how to subset it before accessing to avoid overloading the computer's memory.  
+
+### Loading dataset as data frame
+If the dataset you are interested in is relatively small, we recommend you simply load it into memory usin the `collect` function from `arrow`.  
+
+```{r}
+# Note that running this code may take a while, so only run it if you have enough memory available
+df <- ds |> 
+  collect()
+
+# We can check the first few rows in this dataset
+head(df)
+```
+
+### Lazily loading dataset
+If the dataset of your interest is really large, then it is probably a better idea to subset it before loading to memory. For example, we will keep records when `startYear` is 2025.  
+
+```{r}
+ds_2025 <- ds |> 
+  filter(startYear == 2025) |>
+  collect()
+
+dim(ds_2025)
+```
+
+This is a much smaller version of the seagrass dataset containing on 25 records, which is much easier for a computer to handle.  
+
+**Remember**: Use the `collect` function once you are ready to load the dataset of your interest.  
+
+
+## Observation Effort, Organism Quantity and Richness
+**Observation Effort** is the number of occurrence records (e.g., sampling campaigns), while **Organism Quantity** is the number of organisms of a species recorded at each occurrence.
+
+**Observation Effort** must be taken into account when analysing trends; fluctuations in observation effort tend to distort the reported occurrences.
+
+Species **Richness** refers to the number of different species present in a particular area. While **Organism Quantity** tells us "how many" individuals there are, **Richness** tells us "how many types" of organisms coexist.
+
+Typically the **Richness** of an area correlates to the number of studies carried out in a given area, but eventually plateaus and this plateau is an indication that the studied region is well sampled.
+
+## Visualising seagrass dataset
+We can create a few plots to better understand the structure of this dataset.
+
+```{r}
+# Number of unique datasets per year
+df |> 
+  distinct(startYear, datasetName) |> 
+  group_by(startYear) |> 
+  count() |> 
+  ggplot(aes(startYear, n))+
+  geom_bar(stat = "identity")+
+  scale_x_continuous(breaks = seq(min(df$startYear, na.rm = T)-1,
+                                  max(df$startYear, na.rm = T), by = 4))+
+  theme_bw()+
+  labs(x = "Year", y = "Number of datasets", 
+       title = "Number of datasets over time", 
+       subtitle = "The number of datasets fluctuates over time")+
+  theme(panel.grid.minor = element_blank(), panel.border = element_blank())
+```
+
+```{r}
+# Number of records per year
+df |> 
+  group_by(startYear) |> 
+  count() |> 
+  ggplot(aes(startYear, n))+
+  geom_bar(stat = "identity")+
+  scale_x_continuous(breaks = seq(min(df$startYear, na.rm = T)-1,
+                                  max(df$startYear, na.rm = T), by = 4))+
+  scale_y_continuous(labels = scales::label_comma(),
+                     breaks = seq(0, 250000, by = 50000))+
+  theme_bw()+
+  labs(x = "Year", y = "Number of records", 
+       title = "Number of records over time", 
+       subtitle = "Observation effort changes over time and is correlated to the number of datasets")+
+  theme(panel.grid.minor = element_blank(), panel.border = element_blank())
+```
+
+
+```{r}
+# Number of observations per year
+df |> 
+  select(startYear, occurrenceStatus, organismQuantity) |> 
+  mutate(organismQuantity = case_when((is.na(organismQuantity) & 
+                                         occurrenceStatus == "absent") ~ 0,
+                                      (is.na(organismQuantity) &
+                                         occurrenceStatus == "present") ~ 1,
+                                      T ~ organismQuantity)) |>  
+  group_by(startYear) |> 
+  summarise(tot_obs = sum(organismQuantity, na.rm = T)) |> 
+  ggplot(aes(startYear, tot_obs))+
+  geom_bar(stat = "identity")+
+  scale_x_continuous(breaks = seq(min(df$startYear, na.rm = T)-1,
+                                  max(df$startYear, na.rm = T), by = 4))+
+  scale_y_continuous(labels = scales::label_comma())+
+  theme_bw()+
+  labs(x = "Year", y = "Number of organisms", 
+       title = "Number of organisms over time", 
+       subtitle = "Number of organisms changes over time and is correlated to the number of datasets")+
+  theme(panel.grid.minor = element_blank(), panel.border = element_blank())
+```
+
+
+```{r}
+# Number of unique new species per year
+df |> 
+  distinct(startYear, scientificNameID) |> 
+  arrange(startYear) |> 
+  distinct(scientificNameID, .keep_all = T) |>
+  group_by(startYear) |> 
+  count() |> 
+  ungroup() |> 
+  mutate(tot_sp = cumsum(n)) |> 
+  ggplot(aes(startYear, tot_sp))+
+  geom_density(stat = "identity", fill = "lightblue", alpha = 0.5)+
+  geom_point()+
+  scale_x_continuous(breaks = seq(min(df$startYear, na.rm = T)-1,
+                                  max(df$startYear, na.rm = T), by = 4))+
+  theme_bw()+
+  labs(x = "Year", y = "Species richness", 
+       title = "Number of new species over time", 
+       subtitle = "Number of new species is still increasing")+
+  theme(panel.grid.minor = element_blank(), panel.border = element_blank())
+```
+
+
+We can also explore the information in this table further, by extracting information about the "Water Type" of the sites sampled.
+
+```{r}
+df_water_type <- df |> 
+  mutate(short = str_extract(australianMarineRegionsTags, 
+                                 "\\|(IMCRA:Mesoscale:Water Type.*Waters)\\|",
+                             group = 1),
+         watertype = str_extract(str_split_i(short, "\\|", i = 1), "Type:(.*)", 
+                                 group = 1)) |> 
+  select(!short) |> 
+  drop_na(watertype) 
+```
+
+Now we can check the number of unique datasets available over time per "Water Type".
+
+```{r}
+df_water_type |> 
+  distinct(startYear, datasetName, watertype) |> 
+  group_by(startYear, watertype) |> 
+  count() |> 
+  ggplot(aes(startYear, n))+
+  geom_bar(stat = "identity", aes(fill = watertype), colour = "black")+
+  facet_wrap(~watertype)+
+  labs(y = "Number of datasets", x = "Year")+
+  theme_bw()+
+  theme(legend.position = "none")
+```
+
+
+```{r}
+df_water_type |> 
+  group_by(startYear, watertype) |> 
+  count() |> 
+  ggplot(aes(startYear, n))+
+  geom_bar(stat = "identity", aes(fill = watertype), colour = "black")+
+  facet_wrap(~watertype, scales = "free_y")+
+  scale_y_continuous(labels = scales::label_comma())+
+  labs(y = "Number of records", x = "Year")+
+  theme_bw()+
+  theme(legend.position = "none")
+```
+
+
+```{r}
+df_water_type |> 
+  mutate(organismQuantity = case_when((is.na(organismQuantity) & 
+                                         occurrenceStatus == "absent") ~ 0,
+                                      (is.na(organismQuantity) &
+                                         occurrenceStatus == "present") ~ 1,
+                                      T ~ organismQuantity)) |>  
+  group_by(startYear, watertype) |> 
+  summarise(tot_obs = sum(organismQuantity, na.rm = T)) |> 
+  ggplot(aes(startYear, tot_obs))+
+  geom_bar(stat = "identity", aes(fill = watertype), colour = "black")+
+  facet_wrap(~watertype, scales = "free_y")+
+  labs(y = "Number of organisms", x = "Year")+
+  theme_bw()+
+  theme(legend.position = "none")
+```
+
+
+```{r}
+df_water_type |> 
+  distinct(startYear, watertype, scientificNameID) |> 
+  arrange(startYear) |> 
+  distinct(scientificNameID, watertype, .keep_all = T) |>
+  group_by(startYear, watertype) |> 
+  count() |> 
+  group_by(watertype) |> 
+  mutate(tot_sp = cumsum(n)) |>  
+  ggplot(aes(startYear, tot_sp, fill = watertype, colour = watertype))+
+  geom_density(stat = "identity", alpha = 0.5)+
+  geom_point()+
+  facet_wrap(~watertype, scales = "free_y")+
+  labs(y = "Species richness", x = "Year")+
+  theme_bw()+
+  theme(legend.position = "none")
+```
+
+
+## Data aggregation and mapping with `H3`
+The NESP 5.9 datasets are aggregated data products that cover large regions and temporal periods. This aggregation is useful as it helps us understand the spatio-temporal bounds of our dataset.  
+We use the `H3` package in this notebook because it is an open source package that partitions the world into hexagonal cells, allowing for faster data access.
+
+### `H3` indexing
+The `H3` package allows us to spatially index datasets at different [resolutions](https://h3geo.org/docs/core-library/restable/#average-area-in-km2) (i.e., zoom levels) relative to the recorded latitude and longitude. If you go through the dataset schema, you will notice that it has an `h3Index` column, which contains unique identifiers for each hexagon in our dataset.  
+
+## Identifying suitable trend sites
+
+You can also embed plots, for example:
+```{r}
+df |> 
+  group_by()
+```
+
+
+
+
+```{r}
+df$sfCoord <- st_as_sf(df, coords = c("decimalLongitude", "decimalLatitude"), 
+                       crs = 4326, remove = FALSE)
+
+df <- bind_cols(df, h3_to_geo_boundary_sf(df$h3Index))
+
+test <- df |> 
+  group_by(h3Index) |> 
+  summarise(count = n()) 
+test <- test |> 
+  mutate(index = h3_to_geo_boundary_sf(test$h3Index)) |> 
+  ungroup()
+```
+
+```{r}
+m <- leaflet() |>
+  addTiles() |>
+  addPolygons(data = test$index,
+              fillColor = ~colorNumeric("YlOrRd", test$count)(test$count),
+              fillOpacity = 0.7,
+              color = "black",
+              weight = 1,
+              popup = paste0("Count: ", test$count))
+m
+
+```
+
