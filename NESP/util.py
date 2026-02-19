@@ -43,6 +43,24 @@ TOOLTIP = {
         "zIndex": "1000"
     }
 }
+TOOLTIP_W_YEAR = {
+    "html": """
+        <div style="font-family: 'Helvetica Neue', Arial, sans-serif; padding: 10px;">
+            <b style="font-size: 1.2em;">H3 Index:</b> <code>{h3Index}</code><br/>
+            <hr style="margin: 5px 0; border: 0; border-top: 1px solid #ccc;">
+            <b>Records:</b> {n_records}<br/>
+            <b>Datasets:</b> {datasets}<br/>
+            <b>Years:</b> {years}
+        </div>
+    """,
+    "style": {
+        "width": "33%",
+        "backgroundColor": "#2b2b2b",
+        "color": "white",
+        "borderRadius": "4px",
+        "zIndex": "1000"
+    }
+}
 GLOBAL_VIEW_STATE = pydeck.ViewState(
     latitude=0,
     longitude=0,
