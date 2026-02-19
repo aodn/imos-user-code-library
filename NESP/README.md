@@ -13,3 +13,9 @@ uv venv \
 && source .venv/bin/activate \
 && uv pip install .
 ```
+
+3. Launch the jupyter server
+
+```bash
+jupyter notebook
+```
