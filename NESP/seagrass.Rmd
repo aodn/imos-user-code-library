@@ -345,13 +345,7 @@ Note that the Great Barrier Reef has been included from the World Heritage Areas
 | **IMCRA Provincial** | [Explore](https://fed.dcceew.gov.au/datasets/erin::integrated-marine-and-coastal-regionalisation-of-australia-imcra-v4-0-provincial-bioregions/explore) | [Metadata](https://fed.dcceew.gov.au/datasets/erin::integrated-marine-and-coastal-regionalisation-of-australia-imcra-v4-0-provincial-bioregions/about) | [GeoJSON](https://gis.environment.gov.au/gispubmap/rest/services/ogc_services/IMCRA_Provincial/MapServer/0/query?outFields=*&where=1%3D1&f=geojson) |
 | **IMCRA Mesoscale** | [Explore](https://fed.dcceew.gov.au/datasets/erin::integrated-marine-and-coastal-regionalisation-of-australia-imcra-v4-0-meso-scale-bioregions/explore) | [Metadata](https://fed.dcceew.gov.au/datasets/erin::integrated-marine-and-coastal-regionalisation-of-australia-imcra-v4-0-meso-scale-bioregions/about) | [GeoJSON](https://gis.environment.gov.au/gispubmap/rest/services/ogc_services/IMCRA_Mesoscale/MapServer/0/query?outFields=*&where=1%3D1&f=geojson) |
   
-Follow the Explore links to explore the Australian Marine Regions. The Commonwealth Marine Regions explore map has been embedded below.  
-
-```{r embed-map, echo=FALSE, out.width="100%"}
-# Embed the interactive map URL directly
-knitr::include_url("[https://fed.dcceew.gov.au/datasets/commonwealth-marine-regions/explore?location=-33.665700%2C140.517300%2C4](https://fed.dcceew.gov.au/datasets/commonwealth-marine-regions/explore?location=-33.665700%2C140.517300%2C4)", height = "600px")
-```
-
+Follow the Explore links to explore the Australian Marine Regions. The Commonwealth Marine Regions can be seen in the following link: [https://fed.dcceew.gov.au/datasets/commonwealth-marine-regions/explore?location=-33.665700%2C140.517300%2C4](https://fed.dcceew.gov.au/datasets/commonwealth-marine-regions/explore?location=-33.665700%2C140.517300%2C4)
 
 ## Exploring Available Marine Regions Tags
 Australian Marine Regions Tags have the following syntax:  
