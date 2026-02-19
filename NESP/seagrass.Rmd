@@ -6,11 +6,11 @@ output:
   github_document:
     toc: true
     html_preview: true
-    always_allow_html: true
+  always_allow_html: true
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(fig.path = "NESP/figures/")
+knitr::opts_chunk$set(fig.path = "figures/")
 ```
 
 # Background
@@ -22,6 +22,7 @@ This notebook includes the following sections:
 - [How aggregate and map NESP datasets using the H3 package](#data-aggregation-and-mapping-with-h3)
 - [Identifying suitable sampling sites where trend analysis can be carried out](#identifying-suitable-trend-sites)
 
+**Note:** The `H3` package was originally developed in C, but there are at least three packages that make this package accessible in R. We recommend you install the `h3-r`package, which published in [GitHub](https://github.com/crazycapivara/h3-r/) because this package will automatically install the original `H3` package written in C (unlike the other two options available as of February 2026). More information about the `h3-r` package, as well as a short tutorial can be found in their [documentation](https://crazycapivara.github.io/h3-r/articles/h3.html).
 
 ## Relevant packages
 
@@ -30,6 +31,8 @@ This notebook includes the following sections:
 library(arrow)
 # Indexing system that uses hexagons
 library(h3)
+# Represents simple spatial features
+library(sf)
 # Data manipulation
 library(dplyr)
 library(tidyr)
