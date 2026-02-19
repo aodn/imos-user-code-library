@@ -6,6 +6,7 @@ output:
   github_document:
     toc: true
     html_preview: true
+    always_allow_html: true
 ---
 
 ```{r setup, include=FALSE}
@@ -25,12 +26,18 @@ This notebook includes the following sections:
 ## Relevant packages
 
 ```{r packages}
+# Connects to datasets remotely
 library(arrow)
+# Indexing system that uses hexagons
 library(h3)
+# Data manipulation
 library(dplyr)
 library(tidyr)
 library(stringr)
+# Plotting
 library(ggplot2)
+# Interactive maps
+library(leaflet)
 ```
 
 ## Accessing NESP datasets
@@ -67,7 +74,11 @@ From here, we can see there are 21 columns, but we can check how many records in
 dim(ds)
 ```
 
-This dataset has over 3 million records, which may be too much for some computer to handle, so next we will show how to load a dataset in full and how to subset it before accessing to avoid overloading the computer's memory.  
+This dataset has over 3 million records, which may be too much for some computers to handle, but `arrow` allows us to lazily load the dataset. This means that the data is only load into your memory when you request it, instead of loading all 3 million records at once. This could be especially useful if you have limited computing resources, so you can subset or summarise the data as you need before loading it to your computer to avoid overloading the computer's memory.  
+
+### Lazily loading dataset
+If the dataset of your interest is really large, then it is probably a better idea to subset it before loading to memory. For example, we will keep records when `startYear` is 2025.  
+
 
 ### Loading dataset as data frame
 If the dataset you are interested in is relatively small, we recommend you simply load it into memory usin the `collect` function from `arrow`.  
@@ -279,41 +290,276 @@ We use the `H3` package in this notebook because it is an open source package th
 ### `H3` indexing
 The `H3` package allows us to spatially index datasets at different [resolutions](https://h3geo.org/docs/core-library/restable/#average-area-in-km2) (i.e., zoom levels) relative to the recorded latitude and longitude. If you go through the dataset schema, you will notice that it has an `h3Index` column, which contains unique identifiers for each hexagon in our dataset.  
 
-## Identifying suitable trend sites
-
-You can also embed plots, for example:
 ```{r}
-df |> 
-  group_by()
+# Getting number of records for each polygon ID (h3Index)
+h3_layers <- df |> 
+  group_by(h3Index) |> 
+  summarise(number_records = n())
+
+# Now we get information about datasets associated to each polygon ID
+h3_layers <- df |> 
+  distinct(h3Index, datasetName) |> 
+  group_by(h3Index) |> 
+  summarise(datasets = paste(datasetName, collapse = ", ")) |> 
+  right_join(h3_layers, by = "h3Index") |> 
+  mutate(index = h3_to_geo_boundary_sf(h3_layers$h3Index)) |> 
+  ungroup()
+
+# We can check the results
+head(h3_layers)
+```
+
+
+We can now create an interactive map as shown below. Note that you can interact with the map, that is zoom in and out, and hover over each title to get information about the number of records and datasets available at each polygon.  
+
+```{r}
+m <- leaflet() |>
+  addTiles() |>
+  # Note that we use quantiles so it is easier to distinguish polygon with 
+  # a high number of observations
+  addPolygons(data = h3_layers$index,
+              fillColor = ~colorQuantile("plasma", 
+                                         domain = h3_layers$number_records, 
+                                         n = 10)(h3_layers$number_records),
+              fillOpacity = 0.7, color = "grey", weight = 1,
+              label = paste0("Records: ", h3_layers$number_records, 
+                             "\nDatasets:", h3_layers$datasets),
+              labelOptions = labelOptions(style = list("max-width" = "750px",
+                                                       "white-space" = "normal")))
+
+# Plotting map
+m
+```
+
+
+## Australian Marine Regions
+Each occurrence in the seagrass dataset that we have been exploring so far has been classified using the following Australian Marine Regions (see table below). Note that the classification is not 100% accurate at the region boundaries; it is accurate to ~6km.  
+  
+Note that the Great Barrier Reef has been included from the World Heritage Areas map.  
+  
+| Marine Region Type | Map Explore URL | Metadata URL (REST/About) | GeoJSON API Endpoint |
+| :--- | :--- | :--- | :--- |
+| **Commonwealth Marine Regions** | [Explore](https://fed.dcceew.gov.au/datasets/commonwealth-marine-regions/explore) | [Metadata](https://gis.environment.gov.au/gispubmap/rest/services/ogc_services/Commonwealth_Marine_Regions/MapServer/0) | [GeoJSON](https://gis.environment.gov.au/gispubmap/rest/services/ogc_services/Commonwealth_Marine_Regions/MapServer/0/query?outFields=*&where=1%3D1&f=geojson) |,
+| **World Heritage Areas** | [Explore](https://fed.dcceew.gov.au/datasets/erin::australia-world-heritage-areas/explore) | [Metadata](https://gis.environment.gov.au/gispubmap/rest/services/ogc_services/World_Heritage_Areas/MapServer/0) | [GeoJSON](https://gis.environment.gov.au/gispubmap/rest/services/ogc_services/World_Heritage_Areas/MapServer/0/query?outFields=*&where=1%3D1&f=geojson) |
+| **Marine Parks** | [Explore](https://fed.dcceew.gov.au/datasets/2b3eb1d42b8d4319900cf4777f0a83b9_0/explore) | [Metadata](https://gis.environment.gov.au/gispubmap/rest/services/ogc_services/Australian_Marine_Parks/MapServer/0) | [GeoJSON](https://gis.environment.gov.au/gispubmap/rest/services/ogc_services/Australian_Marine_Parks/MapServer/0/query?outFields=*&where=1%3D1&f=geojson) |
+| **IMCRA Provincial** | [Explore](https://fed.dcceew.gov.au/datasets/erin::integrated-marine-and-coastal-regionalisation-of-australia-imcra-v4-0-provincial-bioregions/explore) | [Metadata](https://fed.dcceew.gov.au/datasets/erin::integrated-marine-and-coastal-regionalisation-of-australia-imcra-v4-0-provincial-bioregions/about) | [GeoJSON](https://gis.environment.gov.au/gispubmap/rest/services/ogc_services/IMCRA_Provincial/MapServer/0/query?outFields=*&where=1%3D1&f=geojson) |
+| **IMCRA Mesoscale** | [Explore](https://fed.dcceew.gov.au/datasets/erin::integrated-marine-and-coastal-regionalisation-of-australia-imcra-v4-0-meso-scale-bioregions/explore) | [Metadata](https://fed.dcceew.gov.au/datasets/erin::integrated-marine-and-coastal-regionalisation-of-australia-imcra-v4-0-meso-scale-bioregions/about) | [GeoJSON](https://gis.environment.gov.au/gispubmap/rest/services/ogc_services/IMCRA_Mesoscale/MapServer/0/query?outFields=*&where=1%3D1&f=geojson) |
+  
+Follow the Explore links to explore the Australian Marine Regions. The Commonwealth Marine Regions explore map has been embedded below.  
+
+```{r embed-map, echo=FALSE, out.width="100%"}
+# Embed the interactive map URL directly
+knitr::include_url("[https://fed.dcceew.gov.au/datasets/commonwealth-marine-regions/explore?location=-33.665700%2C140.517300%2C4](https://fed.dcceew.gov.au/datasets/commonwealth-marine-regions/explore?location=-33.665700%2C140.517300%2C4)", height = "600px")
+```
+
+
+## Exploring Available Marine Regions Tags
+Australian Marine Regions Tags have the following syntax:  
+  
+| TAG | TYPE | OPTIONAL SUPER REGIONS | REGION |
+| :--- | :--- | :--- | :--- |
+| `Commonwealth Marine Region: South-east` | `Commonwealth Marine Region` | | `South-east` |
+| `Marine Park:National Park Zone:Freycinet` | `Marine Park` | `National Park Zone` | `Freycinet` |
+| `IMCRA:Provincial:Water Type:Cold Temperate Waters` | `IMCRA` | `Provincial`, `Water Type` | `Cold Temperate Waters` |
+  
+Extracting the available Australian Marine Regions Tags requires splitting the delimited column:  
+  
+```{r}
+australian_marine_regions_tags <- df |> 
+  select(australianMarineRegionsTags) |> 
+  drop_na() |> 
+  separate_longer_delim(australianMarineRegionsTags, delim = "|") |> 
+  group_by(australianMarineRegionsTags) |> 
+  summarise(count = n()) |> 
+  arrange(desc(count))
+
+# Printing the first 10 tags
+head(australian_marine_regions_tags, n = 10)
+```
+
+
+```{r}
+# Getting number of records for each polygon ID (h3Index)
+marine_reg <- df |>
+  drop_na(australianMarineRegionsTags) |>
+  group_by(h3Index) |> 
+  summarise(number_records = n())
+
+# Now we get information about datasets associated to each polygon ID
+marine_reg <- df |>
+  drop_na(australianMarineRegionsTags) |>
+  distinct(h3Index, datasetName) |>
+  group_by(h3Index) |>
+  summarise(datasets = paste(datasetName, collapse = ", ")) |>
+  right_join(marine_reg, by = "h3Index") 
+
+# Finally we get information about the marine tags
+marine_reg <- df |> 
+  select(h3Index, australianMarineRegionsTags) |> 
+  drop_na(australianMarineRegionsTags) |>
+  distinct() |> 
+  separate_longer_delim(australianMarineRegionsTags, delim = "|") |> 
+  distinct() |> 
+  group_by(h3Index) |>
+  summarise(tags = paste(australianMarineRegionsTags, collapse = ", ")) |>
+  right_join(marine_reg, by = "h3Index") |> 
+  mutate(index = h3_to_geo_boundary_sf(marine_reg$h3Index)) |>
+  ungroup()
+
+# Checking results
+head(marine_reg)
+```
+
+
+```{r}
+m <- leaflet() |>
+  addTiles() |>
+  # Note that we use quantiles so it is easier to distinguish polygon with 
+  # a high number of observations
+  addPolygons(data = marine_reg$index,
+              fillColor = ~colorQuantile("plasma", 
+                                         domain = marine_reg$number_records, 
+                                         n = 10)(marine_reg$number_records),
+              fillOpacity = 0.7, color = "grey", weight = 1,
+              label = paste0("Records: ", marine_reg$number_records, 
+                             "\nDatasets: ", marine_reg$datasets,
+                             "\nTags: ", marine_reg$tags),
+              labelOptions = labelOptions(style = list("max-width" = "750px",
+                                                       "white-space" = "normal")))
+
+# Plotting map
+m
+```
+
+
+## Filtering to a Particular Marine Region
+We could also create a map after selecting (filtering) for a particular tag as follows:  
+
+```{r}
+tropical_waters_df <- df |> 
+  select(!h3Index) |> 
+  filter(str_detect(australianMarineRegionsTags,
+                    "IMCRA:Provincial:Water Type:Tropical Waters")) |> 
+  st_as_sf(coords = c("decimalLongitude", "decimalLatitude"), crs = 4326) 
+
+tropical_waters_df <- tropical_waters_df |> 
+  mutate(h3index = geo_to_h3(tropical_waters_df, 7))
+
+# Getting number of records for each polygon ID (h3Index)
+h3_layers <- tropical_waters_df |>
+  st_drop_geometry() |> 
+  group_by(h3index) |> 
+  summarise(number_records = n())
+
+# Now we get information about datasets associated to each polygon ID
+h3_layers <- tropical_waters_df |>
+  st_drop_geometry() |> 
+  distinct(h3index, datasetName) |>
+  group_by(h3index) |>
+  summarise(datasets = paste(datasetName, collapse = ", ")) |>
+  right_join(h3_layers, by = "h3index") |> 
+  mutate(index = h3_to_geo_boundary_sf(h3_layers$h3index)) |>
+  ungroup()
 ```
 
 
 
+```{r}
+m <- leaflet() |>
+  addTiles() |>
+  # Note that we use quantiles so it is easier to distinguish polygon with 
+  # a high number of observations
+  addPolygons(data = h3_layers$index,
+              fillColor = ~colorQuantile("plasma", 
+                                         domain = unique(h3_layers$number_records), 
+                                         n = 10)(h3_layers$number_records),
+              fillOpacity = 0.7, color = "grey", weight = 1,
+              label = paste0("Records: ", h3_layers$number_records, 
+                             "\nDatasets: ", h3_layers$datasets),
+              labelOptions = labelOptions(style = list("max-width" = "750px",
+                                                       "white-space" = "normal")))
+
+# Plotting map
+m
+```
+
+
+## Identifying suitable trend sites
+In the original map that includes all data, we can see there are some sites with a high density of records, while others have very limited observations. The high density polygons are the most ideal sites for trend analysis.
+
+### Per Region
+Regions with a high density of records are typically good candidates for trend analysis. See above for subsetting and plotting by Australian Marine Regions.
+
+### Per Dataset
+Additionally, the singular datasets that comprise the aggregated data product are typically good candidates for trend analysis.
+
+### Mapping the Spatial Extent of a Particular Dataset
+Similarly to mapping Australian Marine Regions, we may map particular datasets by applying a string constraint.
+
+### Finding Available Datasets
+We may find available datasets by aggregating by the `datasetName` column.
 
 ```{r}
-df$sfCoord <- st_as_sf(df, coords = c("decimalLongitude", "decimalLatitude"), 
-                       crs = 4326, remove = FALSE)
+data_count <- df |> 
+  group_by(datasetName) |> 
+  summarise(count = n()) |> 
+  arrange(count)
 
-df <- bind_cols(df, h3_to_geo_boundary_sf(df$h3Index))
+data_count
+```
 
-test <- df |> 
-  group_by(h3Index) |> 
-  summarise(count = n()) 
-test <- test |> 
-  mutate(index = h3_to_geo_boundary_sf(test$h3Index)) |> 
+
+```{r}
+data_int <- data_count |> 
+  filter(count == max(count)) |> 
+  pull(datasetName)
+```
+
+```{r}
+trop_water_jcu_df <- df |> 
+  select(!h3Index) |> 
+  filter(datasetName == data_int) |> 
+  st_as_sf(coords = c("decimalLongitude", "decimalLatitude"), crs = 4326) 
+
+trop_water_jcu_df  <- trop_water_jcu_df  |> 
+  mutate(h3index = geo_to_h3(trop_water_jcu_df, 6))
+
+# Getting number of records for each polygon ID (h3Index)
+h3_layers <- trop_water_jcu_df  |>
+  st_drop_geometry() |> 
+  group_by(h3index) |> 
+  summarise(number_records = n())
+
+# Now we get information about datasets associated to each polygon ID
+h3_layers <- trop_water_jcu_df  |>
+  st_drop_geometry() |> 
+  distinct(h3index, datasetName) |>
+  group_by(h3index) |>
+  summarise(datasets = paste(datasetName, collapse = ", ")) |>
+  right_join(h3_layers, by = "h3index") |> 
+  mutate(index = h3_to_geo_boundary_sf(h3_layers$h3index)) |>
   ungroup()
 ```
 
 ```{r}
 m <- leaflet() |>
   addTiles() |>
-  addPolygons(data = test$index,
-              fillColor = ~colorNumeric("YlOrRd", test$count)(test$count),
-              fillOpacity = 0.7,
-              color = "black",
-              weight = 1,
-              popup = paste0("Count: ", test$count))
-m
+  # Note that we use quantiles so it is easier to distinguish polygon with 
+  # a high number of observations
+  addPolygons(data = h3_layers$index,
+              fillColor = ~colorQuantile("plasma", 
+                                         domain = unique(h3_layers$number_records), 
+                                         n = 10)(h3_layers$number_records),
+              fillOpacity = 0.7, color = "grey", weight = 1,
+              label = paste0("Records: ", h3_layers$number_records, 
+                             "\nDatasets: ", h3_layers$datasets),
+              labelOptions = labelOptions(style = list("max-width" = "750px",
+                                                       "white-space" = "normal")))
 
+# Plotting map
+m
 ```
+
+
+
 
