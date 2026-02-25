@@ -628,10 +628,37 @@ if(!file.exists("OffshoreRenewable_Energy_Infrastructure_Regions.shp")){
   unzip("OffshoreRenewable_Energy_Infrastructure_Regions.zip")
 }
 
-gdf <- read_sf("Offshore_Renewable_Energy_Infrastructure_Regions.shp") |> 
-  filter(Status == "Declared")
+gdf <- read_sf("Offshore_Renewable_Energy_Infrastructure_Regions.shp")
 ```
 
+
+```{r}
+offshore_wind_gdf <- gdf |> 
+  filter(Status == "Declared") |> 
+  select(Region, geometry) |> 
+  rename(tag = Region) |> 
+  group_by(tag) |> 
+  summarise(geometry = st_union(geometry)) |> 
+  ungroup()
+offshore_wind_gdf
+```
+
+```{r}
+offshore_wind_df <- df |> 
+  filter(str_detect(australianMarineRegionsTags, "South-east|Temperate East|South-west"))
+offshore_wind_df
+```
+
+
+```{r}
+offshore_wind_gdf |> 
+  mutate(index = geo_to_h3(offshore_wind_gdf, 6))
+
+
+
+ df_h3|> 
+  mutate(h3index = geo_to_h3(df_h3, 4))
+```
 
 
 
