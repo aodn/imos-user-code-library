@@ -79,10 +79,6 @@ dim(ds)
 
 This dataset has over 3 million records, which may be too much for some computers to handle, but `arrow` allows us to lazily load the dataset. This means that the data is only load into your memory when you request it, instead of loading all 3 million records at once. This could be especially useful if you have limited computing resources, so you can subset or summarise the data as you need before loading it to your computer to avoid overloading the computer's memory.  
 
-### Lazily loading dataset
-If the dataset of your interest is really large, then it is probably a better idea to subset it before loading to memory. For example, we will keep records when `startYear` is 2025.  
-
-
 ### Loading dataset as data frame
 If the dataset you are interested in is relatively small, we recommend you simply load it into memory usin the `collect` function from `arrow`.  
 
@@ -95,7 +91,7 @@ df <- ds |>
 head(df)
 ```
 
-### Lazily loading dataset
+### Subsetting dataset before loading
 If the dataset of your interest is really large, then it is probably a better idea to subset it before loading to memory. For example, we will keep records when `startYear` is 2025.  
 
 ```{r}
@@ -510,6 +506,9 @@ data_count
 data_int <- data_count |> 
   filter(count == max(count)) |> 
   pull(datasetName)
+
+#Check name of dataset with the most observations
+data_int
 ```
 
 ```{r}
@@ -558,5 +557,66 @@ m
 ```
 
 
+## Finding trend sites with `H3`
+
+We may also identify trend sites by finding `H3` cells associated with data over a year range.
+
+```{r}
+df_h3 <- df |> 
+  select(!h3Index) |> 
+  st_as_sf(coords = c("decimalLongitude", "decimalLatitude"), crs = 4326)
+
+df_h3 <- df_h3|> 
+  mutate(h3index = geo_to_h3(df_h3, 7))
+
+# Getting number of records for each polygon ID (h3Index)
+n_rec <- df_h3 |>
+  st_drop_geometry() |> 
+  group_by(h3index) |> 
+  summarise(number_records = n())
+
+n_dat <- df_h3 |> 
+  st_drop_geometry() |> 
+  distinct(h3index, datasetName) |> 
+  group_by(h3index) |> 
+  summarise(number_datasets = n(),
+            datasets = paste(datasetName, collapse = ", "))
+
+n_yr <- df_h3 |> 
+  st_drop_geometry() |> 
+  distinct(h3index, startYear) |> 
+  group_by(h3index) |> 
+  summarise(number_years = n(),
+            years = paste(startYear, collapse = "|"))
+
+# Now we get information about datasets associated to each polygon ID
+h3_layers <- n_rec |> 
+  right_join(n_yr, by = "h3index") |> 
+  right_join(n_dat, by = "h3index") |> 
+  filter(number_years >= 2) 
+
+h3_layers <- h3_layers|> 
+  mutate(index = h3_to_geo_boundary_sf(h3_layers$h3index)) |>
+  ungroup()
+```
 
 
+```{r}
+m <- leaflet() |>
+  addTiles() |>
+  # Note that we use quantiles so it is easier to distinguish polygons with 
+  # a higher number of observations
+  addPolygons(data = h3_layers$index,
+              fillColor = ~colorQuantile("plasma", 
+                                         domain = unique(h3_layers$number_years), 
+                                         n = 5)(h3_layers$number_years),
+              fillOpacity = 0.7, color = "grey", weight = 1,
+              label = paste0("Records: ", h3_layers$number_records, 
+                             "\nDatasets: ", h3_layers$datasets,
+                             "\nYears: ", h3_layers$years),
+              labelOptions = labelOptions(style = list("max-width" = "750px",
+                                                       "white-space" = "normal")))
+
+# Plotting map
+m
+```
