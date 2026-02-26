@@ -646,20 +646,67 @@ offshore_wind_gdf
 
 ```{r}
 offshore_wind_df <- df |> 
-  filter(str_detect(australianMarineRegionsTags, "South-east|Temperate East|South-west"))
+  filter(str_detect(australianMarineRegionsTags, "South-east|Temperate East|South-west")) |> 
+  st_as_sf(coords = c("decimalLongitude", "decimalLatitude"), crs = 4326)
 offshore_wind_df
 ```
 
 
 ```{r}
-offshore_wind_gdf |> 
-  mutate(index = geo_to_h3(offshore_wind_gdf, 6))
+overlapping_pts <- st_join(offshore_wind_df, offshore_wind_gdf) |> 
+   filter(!is.na(tag))
 
-
-
- df_h3|> 
-  mutate(h3index = geo_to_h3(df_h3, 4))
+ggplot()+
+  geom_sf(data = offshore_wind_gdf, fill = "lightblue", colour = "orange",
+          linewidth = 2)+
+  geom_sf(data = overlapping_pts, aes(colour = tag))+
+  theme_bw()+
+  labs(title = "Records in offshore wind farm regions", 
+       subtitle = "Records that fall within the designated offshore wind farm regions")
 ```
 
+```{r}
+overlapping_pts <- overlapping_pts |> 
+  mutate(h3index = geo_to_h3(overlapping_pts, 6)) |> 
+  select(!h3Index)
 
+n_recs <- overlapping_pts |> 
+  st_drop_geometry() |> 
+  group_by(h3index) |> 
+  summarise(number_records = n())
+
+n_dat <- overlapping_pts |> 
+  st_drop_geometry() |> 
+  distinct(h3index, datasetName) |> 
+  group_by(h3index) |> 
+  summarise(number_datasets = n(),
+            datasets = paste(datasetName, collapse = ", "))
+
+h3_layers <- overlapping_pts |> 
+  right_join(n_dat, by = "h3index") |> 
+  right_join(n_recs, by = "h3index")
+
+h3_layers <- h3_layers |>
+  mutate(index = h3_to_geo_boundary_sf(h3_layers$h3index)) |>
+  ungroup()
+```
+
+```{r}
+m <- leaflet() |>
+  addTiles() |>
+  # Note that we use quantiles so it is easier to distinguish polygons with 
+  # a higher number of observations
+  addPolygons(data = h3_layers$index,
+              fillColor = ~colorQuantile("plasma", 
+                                         domain = unique(h3_layers$number_records), 
+                                         n = 5)(h3_layers$number_records),
+              fillOpacity = 0.7, color = "grey", weight = 1,
+              label = paste0("Records: ", h3_layers$number_records, 
+                             "\nDatasets: ", h3_layers$datasets),
+              labelOptions = labelOptions(style = list("max-width" = "750px",
+                                                       "white-space" = "normal")))
+
+# Plotting map
+m
+```
 
