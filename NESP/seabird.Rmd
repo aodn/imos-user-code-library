@@ -639,7 +639,8 @@ offshore_wind_gdf <- gdf |>
   rename(tag = Region) |> 
   group_by(tag) |> 
   summarise(geometry = st_union(geometry)) |> 
-  ungroup()
+  ungroup() |> 
+  st_transform(crs = 4326)
 offshore_wind_gdf
 ```
 

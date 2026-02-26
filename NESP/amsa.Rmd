@@ -1,0 +1,132 @@
+---
+title: "AMSA"
+author: "Karishma Khanna, Denisse Fierro Arcos"
+date: "2026-02-18"
+output: 
+  github_document:
+    toc: true
+    html_preview: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.path = "figures/")
+```
+
+# Background
+This R notebook outlines the packages needed to access and analyse NESP Data Products, as well as how to check their content structure. This notebook was originally written in Python by Karishma Kahnna It was "translated" into R by Denisse Fierro Arcos. It should be noted that although both notebooks cover the same topic, the content may vary between these notebooks as features may not be available in both Python and R.  
+  
+This notebook includes the following sections:  
+- [Relevant R packages needed to access NESP Data Products](#relevant-packages)
+- [How to access NESP Data Products](#accessing-nesp-datasets)
+- [How aggregate and map NESP datasets using the H3 package](#data-aggregation-and-mapping-with-h3)
+- [Identifying suitable sampling sites where trend analysis can be carried out](#identifying-suitable-trend-sites)
+
+**Note:** The `H3` package was originally developed in C, but there are at least three packages that make this package accessible in R. We recommend you install the `h3-r`package, which published in [GitHub](https://github.com/crazycapivara/h3-r/) because this package will automatically install the original `H3` package written in C (unlike the other two options available as of February 2026). More information about the `h3-r` package, as well as a short tutorial can be found in their [documentation](https://crazycapivara.github.io/h3-r/articles/h3.html).
+
+## Relevant packages
+
+```{r packages}
+# Connects to datasets remotely
+library(arrow)
+# Indexing system that uses hexagons
+library(h3)
+# Represents simple spatial features
+library(sf)
+# Data manipulation
+library(dplyr)
+library(lubridate)
+library(tidyr)
+library(stringr)
+# Plotting
+library(ggplot2)
+# Interactive maps
+library(leaflet)
+```
+
+## Accessing NESP datasets
+NESP 5.9 datasets can be accessed via the `arrow` package for R. First, we will need to create a connection with the parent folder containing NESP data as follows:  
+
+```{r}
+conn <- s3_bucket("s3://data-uplift-public/", anonymous = TRUE, 
+                  region = "ap-southeast-2")
+```
+  
+Once a connection has been established, then we can select a specific dataset that interest us. In this case, we will be accessing a dataset about seagrasses. By using the `open_dataset` function from `arrow` we can load either the dataset on its entirety or a subset.
+
+```{r}
+url <- "s3://data-uplift-public/stored/datauplift/amsa/dataset"
+ds <- open_dataset(sources = url, filesystem = conn)
+ds
+```
+
+The AMSA dataset is partitioned (i.e., separated into parquet fragments), but it is really a single file. We can check the number of files included in a dataset as follows:  
+
+```{r}
+ds$files
+```
+
+We can check the file structure (i.e., schema) of the seabird dataset. This will give us the name of the columns contained in the dataset, which can help us filter the data before accessing.  
+
+```{r}
+ds$schema
+```
+
+From here, we can see there are 16 columns, but we can check how many records in total are included in the dataset as follows:  
+
+```{r}
+dim(ds)
+```
+
+This dataset has a few million records, which may be too much for some computers to handle, but `arrow` allows us to lazily load the dataset. This means that the data is only load into your memory when you request it, instead of loading all records at once. This could be especially useful if you have limited computing resources, so you can subset or summarise the data as you need before loading it to your computer to avoid overloading the computer's memory.  
+
+## `H3` Aggregation and Mapping
+The NESP 5.9 datasets are aggregated data products that cover large regions and time periods. It is useful to first aggregate the datasets so that we may understand their temporal-spatial bounds.
+
+### `H3` Indexing
+The `H3` library allows us to spatially index datasets at different resolutions (zoom levels) according to the record latitude and longitude.
+
+### Visualization Strategy
+- **Log-Scaling:** Maritime traffic density varies wildly (Power Law). We apply a transformation to make both ports and open oceans visible.
+- **Global Max:** We calculate the maximum density across all years to create a fixed color scale. This ensures that "Red" in 2013 represents the same density as "Red" in 2024, allowing for valid comparisons.
+
+```{r}
+# --- H3 Aggregation ---
+# Let's check the years available in the dataset
+yrs <- ds |> 
+  select(eventDate) |> 
+  filter(eventDate <= )
+  # mutate(year = year(eventDate)) |> 
+  distinct(year) |>
+  collect()
+
+#Check results
+yrs 
+```
+
+## Visualising the `H3` Aggregation
+With the data aggregated and the global scale determined, we can now render the spatial density map. We will complete the following steps:
+- **Filtering:** Selecting the specific year from the aggregated dataset.
+- **Normalization:** Mapping the Log-Score to a fixed color palette using the GLOBAL_MAX_LOG calculated previously.
+- **
+Rendering**: Generating the 3D Hexagon Layer.
+
+```{r}
+yr <- 2013
+
+df_short <- ds |> 
+  filter(eventDate >= as_date("2013-01-01") & )
+  filter(year(eventDate) == yr) |> 
+  group_by(h3Index) |> 
+  summarise(n_records = n()) |> 
+  collect()
+
+df_short |> 
+  group_by(h3Index) |> 
+  summarise(n_records = n())
+
+
+```
+
+
+
+
