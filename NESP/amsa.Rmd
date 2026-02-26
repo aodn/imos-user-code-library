@@ -191,41 +191,7 @@ m
 ```
 
 
-## Longitudinal Data Health
-This section characterizes the dataset's temporal stability.
 
-Long-term maritime datasets are frequently influenced by "Structural Breaks"—step-changes in data volume caused by upgrades to surveillance infrastructure (e.g., new satellite launches). The following analysis distinguishes between actual fleet growth (increased traffic) and systematic growth (improved sensor sensitivity).
-
-### Methodology
-To quantify these trends, we aggregate the data annually and derive three core metrics:  
-1. **Volume:** The total count of AIS transmission records (Data Size).  
-2. **Fleet:** The count of unique vessels identified by craftID (Traffic Size).  
-3. **Intensity:** The average number of records per vessel (Sensor Resolution).  
-  
-**Normalization Strategy:** To compare trends across different scales (thousands of ships vs. millions of records), all metrics are indexed to their 2012 baseline (2012 = 100). This allows for a direct correlation analysis of relative growth rates.
-
-```{r}
-tic()
-vessels_yr <-  ds |> 
-  select(eventDate, craftID) |> 
-  mutate(year = year(eventDate)) |> 
-  distinct(year, craftID) |> 
-  group_by(year) |> 
-  summarise(unique_vessels = n()) |> 
-  collect()
-toc()
-
-recs_yr <-  ds |> 
-  group_by(year(eventDate)) |> 
-  summarise(total_records = n()) |> 
-  collect()
-
-ts_yr <- ds |> 
-  distinct(eventDate) |> 
-  group_by(year(eventDate)) |> 
-  summarise(unique_timestamps = n()) |> 
-  collect()
-```
 
 
 
