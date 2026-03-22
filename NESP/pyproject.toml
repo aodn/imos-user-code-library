@@ -11,6 +11,7 @@ dependencies = [
     "matplotlib>=3.10.8",
     "notebook>=7.5.3",
     "pandas==2.3.3",
+    "pandoc>=2.4",
     "polars>=1.37.1",
     "polars-h3>=0.6.1",
     "polars-st>=0.4.3",
