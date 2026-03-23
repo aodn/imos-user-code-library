@@ -1,0 +1,27 @@
+[project]
+name = "nesp"
+version = "1.0.0"
+description = "Load and analyse NESP 5.9 Datasets"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "altair>=6.0.0",
+    "geopandas>=1.1.2",
+    "h3>=4.4.2",
+    "matplotlib>=3.10.8",
+    "notebook>=7.5.3",
+    "pandas==2.3.3",
+    "pandoc>=2.4",
+    "polars>=1.37.1",
+    "polars-h3>=0.6.1",
+    "polars-st>=0.4.3",
+    "pyarrow>=23.0.0",
+    "pydeck>=0.9.1",
+    "rich>=14.3.1",
+    "seaborn>=0.13.2",
+]
+
+[dependency-groups]
+dev = [
+    "nbstripout>=0.9.0",
+]
