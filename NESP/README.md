@@ -22,22 +22,24 @@ jupyter notebook
 
  ## NESP 5.9 Datasets
 
-| Dataset name | Description | Metadata | S3 URL |
+ 
+
+| Dataset name | Description | Metadata | S3 URI |
 | ------------ | ----------- | -------- | ------ |
-| AMSA         | AMSA Vessel Tracking               | -     | [link](s3://data-uplift-public/stored/datauplift/amsa/)                                   |
-| Kelp         | Squidle+ Kelp Annotations          | -     | [link](s3://data-uplift-public/stored/datauplift/kelp/kelp.parquet)                       |
-| NRMN         | NRMN Reef Life Surveys             | -     | [link](s3://data-uplift-public/stored/datauplift/nrmn/nrmn.parquet)    |
-| Seabird      | Seabird Observations and Tracking  | -     | [link](s3://data-uplift-public/stored/datauplift/seabird/seabird.parquet)                 |
-| Seagrass     | Seagrass Surveys                   | -     | [link](s3://data-uplift-public/stored/datauplift/seagrass/seagrass.parquet)               |
+| AMSA         | AMSA Vessel Tracking               | -     | s3://data-uplift-public/stored/datauplift/amsa/                     |
+| Kelp         | Squidle+ Kelp Annotations          | -     | s3://data-uplift-public/stored/datauplift/kelp/kelp.parquet         |
+| NRMN         | NRMN Reef Life Surveys             | -     | s3://data-uplift-public/stored/datauplift/nrmn/nrmn.parquet         |
+| Seabird      | Seabird Observations and Tracking  | -     | s3://data-uplift-public/stored/datauplift/seabird/seabird.parquet   |
+| Seagrass     | Seagrass Surveys                   | -     | s3://data-uplift-public/stored/datauplift/seagrass/seagrass.parquet |
   
-### S3 Details\n"
-NESP 5.9 datasets are currently stored in S3 and are publicly available as per the following table:\n"
+### S3 Details
+NESP 5.9 datasets are currently stored in S3 and are publicly available as per the following table:
 
 | Bucket               | Key                                                      | Partitioned |
 | -------------------- | -------------------------------------------------------- | ----------- |
 | `data-uplift-public` | `stored/datauplift/amsa/year=*/source=*/*.parquet`       | [x]         |
 | `data-uplift-public` | `stored/datauplift/kelp/kelp.parquet`                    | [ ]         |
-| `data-uplift-public` | `stored/datauplift/nrmn/nrmn.parquet` | [ ]         |\n",
+| `data-uplift-public` | `stored/datauplift/nrmn/nrmn.parquet`                    | [ ]         |
 | `data-uplift-public` | `stored/datauplift/seabird/seabird.parquet`              | [ ]         |
 | `data-uplift-public` | `stored/datauplift/seagrass/seagrass.parquet`            | [ ]         |
 
