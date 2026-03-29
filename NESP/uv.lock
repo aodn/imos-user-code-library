@@ -1234,7 +1234,7 @@ wheels = [
 [[package]]
 name = "nesp"
 version = "1.0.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "altair" },
     { name = "geopandas" },
