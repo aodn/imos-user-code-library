@@ -47,14 +47,14 @@ library(leaflet)
 NESP 5.9 datasets can be accessed via the `arrow` package for R. First, we will need to create a connection with the parent folder containing NESP data as follows:  
 
 ```{r}
-conn <- s3_bucket("s3://data-uplift-public/", anonymous = TRUE, 
+conn <- s3_bucket("s3://aodn-cloud-optimised/", anonymous = TRUE, 
                   region = "ap-southeast-2")
 ```
   
 Once a connection has been established, then we can select a specific dataset that interest us. In this case, we will be accessing a dataset about seagrasses. By using the `open_dataset` function from `arrow` we can load either the dataset on its entirety or a subset.
 
 ```{r}
-url <- "s3://data-uplift-public/stored/datauplift/seabird/seabird.parquet"
+url <- "s3://aodn-cloud-optimised/aggregated_seabird_nonqc.parquet/"
 ds <- open_dataset(sources = url, filesystem = conn)
 ds
 ```
